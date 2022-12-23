@@ -98,6 +98,10 @@ class QuartoEnv(gym.Env):
         print(f"Next: {self.piece}, Free: {''.join(str(p) for p in self.game.available_pieces)}")
         print()
 
+    @property
+    def legal_actions(self):
+        return self.game.get_valid_actions()
+
     def __del__(self):
         self.close()
 
