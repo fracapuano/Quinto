@@ -212,12 +212,13 @@ class QuartoGame:
         # retrieve the available positions.
         # These positions are returned as [x, y] coordinates.
         available_pos = self.free_spots()
-        # # flat down the grid.
-        # flat_available_pos = [pos[0] * 4 + pos[1] for pos in available_pos]
+        # return the available pieces.
+        # If there is only one available position, then there is no available piece, i.e., self.available_pieces in an empty list
+        # We want to return None instead of [].
+        available_pieces = self.available_pieces if len(available_pos) > 1 else [None]
 
         # return the array of available actions.
-        # return np.fromiter(product(flat_available_pos, self.available_pieces), dtype = tuple)
-        return np.fromiter(product(available_pos, self.available_pieces), dtype = tuple)
+        return np.fromiter(product(available_pos, available_pieces), dtype = tuple)
 
     
 
