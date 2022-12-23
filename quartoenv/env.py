@@ -86,7 +86,6 @@ class QuartoEnv(gym.Env):
 
         return self._observation, reward, self.done, info
 
-
     def render(self, mode, **kwargs):
         for row in self.game.board:
             s = ""
@@ -98,6 +97,10 @@ class QuartoEnv(gym.Env):
             print(s)
         print(f"Next: {self.piece}, Free: {''.join(str(p) for p in self.game.available_pieces)}")
         print()
+
+    @property
+    def legal_actions(self):
+        return self.game.get_valid_actions()
 
     def __del__(self):
         self.close()
