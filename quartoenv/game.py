@@ -77,8 +77,8 @@ class QuartoGame:
             # if board is given, onnly some pieces will be available 
             self.available_pieces = [piece for piece in self.all_pieces if piece not in self.board]
         else:  
-            # initialize board from scratch. By default, an empty spot will be associated will value 0.
-            self.board = np.zeros((4,4))
+            # initialize board from scratch. By default, an empty spot will be associated with value -1.
+            self.board = -1 * np.ones((4,4))
             # all pieces are available
             self.available_pieces = self.all_pieces
 
@@ -109,7 +109,7 @@ class QuartoGame:
 
         # check if position is available
         logger.debug(f"Willing to play at ({x},{y})")
-        if self.board[x, y] != 0:
+        if self.board[x, y] != -1:
             # cell is not empty
             logger.warn(f"Not on a free spot {self.board[x, y]} at {x}, {y}")
             return False
@@ -171,7 +171,7 @@ class QuartoGame:
             bool: True if the game is a tie, False otherwise.
         """
         # nobody has won yet AND the board is full.
-        return (not self.game_over) and (0 not in self.board)
+        return (not self.game_over) and (-1 not in self.board)
 
     @property
     def free_spots(self):
@@ -180,7 +180,7 @@ class QuartoGame:
         Returns:
             np.array: array containing tuples (x, y) with the coordinates of the available positions on the board
         """
-        return np.argwhere(self.board == 0)  # 0 identifies an empty spot
+        return np.argwhere(self.board == -1)  # -1 identifies an empty spot
     
     def common(a, b, c, d):
         """ Given four pieces along a line, check if they share a property.
@@ -189,7 +189,7 @@ class QuartoGame:
             bool: True if the 4 pieces share a property, False otherwise.
         """
         # NECESSARY (but not sufficient) CONDITION: there must be 4 pieces along the considered line.
-        if 0 in (a, b, c, d):  # one of the considered position is empty
+        if -1 in (a, b, c, d):  # one of the considered position is empty
             return False
 
         # turn the pieces (which are integers atm) into the corresponding Quarto pieces
@@ -202,8 +202,7 @@ class QuartoGame:
         # no common trait has been found among the given pieces
         return False
 
-    @property
-    def get_valid_actions(self):
+    def get_valid_actions(self) -> np.array:
         """In any situation of the game, returns the available actions as ((x, y), QuartoPiece)
         
         Returns:
@@ -211,17 +210,11 @@ class QuartoGame:
         """
         # retrieve the available positions.
         # These positions are returned as [x, y] coordinates.
-        available_pos = self.free_spots()
+        available_pos = self.free_spots
         # return the available pieces.
-        # If there is only one available position, then there is no available piece, i.e., self.available_pieces in an empty list
-        # We want to return None instead of [].
+        # If there is only one available position, then there is no available piece, i.e., self.available_pieces
+        # in an empty list. In this case, we want to return None instead of [].
         available_pieces = self.available_pieces if len(available_pos) > 1 else [None]
 
         # return the array of available actions.
         return np.fromiter(product(available_pos, available_pieces), dtype = tuple)
-
-    
-
-
-
-        
