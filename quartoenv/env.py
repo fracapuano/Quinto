@@ -2,9 +2,7 @@ import gym
 from gym.spaces import MultiDiscrete
 import logging
 import numpy as np
-
-from typing import Union, Iterable
-
+from typing import Tuple
 from .game import QuartoGame, QuartoPiece, QUARTO_DICT
 
 logger = logging.getLogger(__name__)
@@ -34,7 +32,7 @@ class QuartoEnv(gym.Env):
         self.broken = False
         return self._observation
 
-    def step(self, action):
+    def step(self, action:Tuple[tuple, QuartoPiece])->Tuple:
         """This function steps the environment considering the given action"""
         # sparse rewards - no reward but in terminal states
         # TODO: Might be interesting to reward negatively the agent at each turn to encourage
@@ -64,7 +62,7 @@ class QuartoEnv(gym.Env):
             if not valid:
                 # Invalid move
                 reward = -200
-                self.broken = True
+                self.broken = True  # boolean indicator indicating when invalid action is performed
                 info['invalid'] = True
             
             # check if played move makes the agent win
@@ -106,8 +104,7 @@ class QuartoEnv(gym.Env):
         self.close()
 
 class MoveEncoderV0(gym.ActionWrapper):
-    """First version of the Move Encoding wrapping
-
+    """Move Encoding wrapping
     Action is [pos, next]
     """
 
@@ -115,17 +112,16 @@ class MoveEncoderV0(gym.ActionWrapper):
         super(MoveEncoderV0, self).__init__(env)
         # action is [pos, next]
         # both are not null, they are just ignored when irrelevant
-        self.action_space = gym.spaces.MultiDiscrete([16, 16])
+        self.action_space = MultiDiscrete([16, 16])
 
-    def action(self, action):
-        """Decode an action of the type (position : int, piece : int) into an action of the type ((x, y), QuartoPiece).
+    def action(self, action:Tuple[int, int])->Tuple[tuple, QuartoPiece]:
+        """Decode an action of the type (position :int, piece :int) into an action of the type ((x, y), QuartoPiece).
 
         Args:
-            action (Iterable): Iterable of two entries.
-                               First entry is an integer referring to the position on the board where the player wishes to place the piece chosen by the previous player.
-                               Second entry is an integer referring to the piece that the next player should place.
+            action (Tuple[int, int]): Tuple of two integer entries. Refer to `decode` method for full documentation
+                              
         Returns:
-            _type_: decoded action, as per `decode` function.
+            Tuple[tuple, QuartoPiece]: decoded action, as per `decode` function.
         """
         return self.decode(action)
 
@@ -139,36 +135,61 @@ class MoveEncoderV0(gym.ActionWrapper):
         for action in self.game.get_valid_actions():
             yield self.encode(action)
 
-    def action_masks(self):
-        # get unique positions
-        valid_positions = list(set([pos for pos, _ in self.legal_actions()]))
-        # initialise masking vector -> everything is False
-        mask_pos = [False for i in range(16)]
-        # convert valid position to True
-        for valid_pos in valid_positions:
-            mask_pos[valid_pos] = True
+    def action_masks(self)->tuple:
+        """This function returns masks for the currently available actions given the board state
+        
+        Returns: 
+            tuple: Masked positions and pieces for the given board configuration
+        """
 
-        # repeat for piece
+        # get valid positions
+        valid_positions = list(set([pos for pos, _ in self.legal_actions()]))
+        # convert valid positions (in their integer representation) to True
+        mask_pos = [i in valid_positions for i in range(16)]  # True when move is valid, else oth.
+
         # get unique pieces
         valid_pieces = list(set([piece for _, piece in self.legal_actions()]))
-        # initialise masking vector -> everything is False
-        mask_piece = [False for i in range(16)]
-        # convert valid pieces to True
-        for valid_piece in valid_pieces:
-            mask_piece[valid_piece] = True
+        # convert valid pieces (in their integer representation) to True
+        mask_piece = [i in valid_pieces for i in range(16)]
         
-        return [mask_pos, mask_piece]
-        
-    action_mask_fn = action_masks
+        return (mask_pos, mask_piece)
 
-    def decode(self, action : Iterable):
-        """Decode an action. Here, action is an iterable of the type (position, piece), where both position and piece are integers.
-        Converts the integer position into (x, y) coordinates and the integer piece into the corresponding Quarto piece.
+    def encode(self, action:Tuple[tuple, QuartoPiece])->Tuple[int, int]:
+        """Encode an action. Here, an action is a Tuple of ((x, y), QuartoPiece).
+        Converts the (x, y) coordinates into the integer position and the QuartoPiece into the corresponding
+        integer representation.
 
         Args:
-            action (Iterable): Iterable of two entries.
-                          First entry is an integer referring to the position on the board where the player wishes to place the piece chosen by the previous player.
-                          Second entry is an integer referring to the piece that the next player should place.
+            action (Tuple[tuple, QuartoPiece]): (Position to be played, Piece chosen for other player).
+                                                First entry are the (x, y) coordinates of the position on the board where 
+                                                the player wishes to place the piece chosen by the previous player.
+                                                Second entry is the QuartoPiece that the next player should place.
+
+        Returns:
+            Tuple[tuple, int]: Iterable of 2 entries of the type (integer position, integer piece).
+        """
+        # unpack the action.
+        position, piece = action
+        # convert (x, y) coordinates into a single integer
+        position_index = position[0] * 4 + position[1]
+        # piece is None during the last move, where there is no pieces left to choose.
+        if piece is not None:
+            # convert the Quarto piece into an integer.
+            piece_index = piece.index
+        
+        return position_index, piece_index
+
+
+    def decode(self, action:Tuple[int, int])->Tuple[tuple, QuartoPiece]:
+        """Decode an action from the actual MultiDiscrete action space. Here, action is an iterable of the type (position, piece),
+        where both position and piece are integers. Converts the integer position into (x, y) coordinates and the integer piece 
+        into the corresponding Quarto piece.
+
+        Args:
+            action (Tuple[int, int]): Action to be decoded.
+                                      First entry is an integer referring to the position on the board where the player wishes to 
+                                      place the piece chosen by the previous player.
+                                      Second entry is an integer referring to the piece that the next player should place.
 
         Returns:
             tuple: Iterable of 2 entries of the type ((x, y), QuartoPiece)
@@ -183,70 +204,38 @@ class MoveEncoderV0(gym.ActionWrapper):
             piece = QUARTO_DICT[piece]
         return position, piece
 
-    def encode(self, action : Iterable):
-        """Encode an action. Here, action is an iterable of the type ((x, y), QuartoPiece).
-        Converts the (x, y) coordinates into the integer position and the QuartoPiece into the corresponding integer representation.
-
-        Args:
-            action (Iterable): Iterable of two entries.
-                             First entry are the (x, y) coordinates of the position on the board where the player wishes to place the piece chosen by the previous player.
-                             Second entry is the QuartoPiece that the next player should place.
-
-        Returns:
-            tuple: Iterable of 2 entries of the type (integer position, integer piece).
-        """
-        # unpack the action.
-        position, piece = action
-        # convert the integer position into (x, y) coordinates.
-        position = position[0] * 4 + position[1]
-        # piece is None during the last move, where there is no pieces left to choose.
-        if piece is not None:
-            # convert the Quarto piece into an integer.
-            piece = piece.index
-        return position, piece
-
-
 class QuartoEnvV0(QuartoEnv):
-    """ The encoding that were used by the v0 of the env
+    """
+    Quarto Env supporting move encoding
     That's a subclass and not a wrapper.
     """
 
     def __init__(self):
         super(QuartoEnvV0, self).__init__()
-
-        # next piece + board (flatten) 
-        # TODO: maybe [16]??
-        self.observation_space = gym.spaces.MultiDiscrete([17] * (1+4*4))
+        """
+        Observation space observed at various 
+        """
+        # observation space: describes board + player hand 
+        # board described as 16 cells in which one can find a piece (0-15) or nothing (16)
+        # same goes with hand, either a piece (0-15) or nothing (16)
+        self.observation_space = MultiDiscrete([16+1] * 16+1)
         
-        # action is [pos, next]
-        # both are not null, they are just ignored when irrelevant
-        self.action_space = gym.spaces.MultiDiscrete([16, 16])
+        # actions space: described as move played (cell played) and piece chosen from still
+        #                availables.
+        # 16: moves that can be chosen; 16: pieces that can be played
+        self.action_space = MultiDiscrete([16, 16])
 
-    def step(self, action):
-        position, next = action
-        if next is not None:
-            next = QuartoPiece(next)
-        position = (position % 4, position // 4)
+        # move encoder to take care of turning tuples/objects into integers
+        self.move_encoder = MoveEncoderV0()
+
+    def step(self, action:Tuple[int,int]):
+        """Steps the environment given an action"""
+        # decoding and unpacking action
+        position, next = self.move_encoder.decode(action=action)
+        # performing action on env
         return super(QuartoEnvV0, self).step((position, next))
 
     @property
-    def observation(self):
-        board = []
-        for row in self.game.board:
-            for piece in row:
-                if piece is None:
-                    board.append(self.EMPTY)
-                else:
-                    board.append(QuartoEnv.pieceNum(piece) + 1)
-        if self.piece is None:
-            piece = [self.EMPTY]
-        else :
-            piece = [QuartoEnv.pieceNum(self.piece) + 1]
-        return np.concatenate((piece, board)).astype(np.int8)
-
-    @property
     def legal_actions(self):
-        for position, piece in super(QuartoEnvV0, self).legal_actions:
-            x, y = position
-            yield x+y*4, QuartoEnv.pieceNum(piece)
-
+        for game_action in super(QuartoEnvV0, self).legal_actions:
+            yield self.move_encoder.encode(game_action)
