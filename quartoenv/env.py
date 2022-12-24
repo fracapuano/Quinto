@@ -8,10 +8,16 @@ from .game import QuartoGame, QuartoPiece, QUARTO_DICT
 logger = logging.getLogger(__name__)
 
 class QuartoEnv(gym.Env):
-    EMPTY = 0
-    metadata = {'render.modes':['terminal']}
+    def __init__(self): 
+        
+        self.game = QuartoGame()
+        self.turns = 0
+        self.piece = None
+        self.broken = False
+        self.EMPTY = 0
+        self.metadata = {'render.modes':['terminal']}
 
-    action_space, observation_space = None, None
+        self.action_space, observation_space = None, None
 
     @property
     def _observation(self):
