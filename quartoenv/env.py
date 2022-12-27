@@ -17,7 +17,7 @@ class QuartoEnv(gym.Env):
         self.EMPTY = 0
         self.metadata = {'render.modes':['human', 'terminal']}
 
-        self.action_space, observation_space = None, None
+        self.action_space, self.observation_space = None, None
 
     @property
     def _observation(self):
