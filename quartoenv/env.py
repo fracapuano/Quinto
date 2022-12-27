@@ -15,7 +15,7 @@ class QuartoEnv(gym.Env):
         self.piece = None
         self.broken = False
         self.EMPTY = 0
-        self.metadata = {'render.modes':['terminal']}
+        self.metadata = {'render.modes':['human', 'terminal']}
 
         self.action_space, observation_space = None, None
 
@@ -61,7 +61,7 @@ class QuartoEnv(gym.Env):
         # self.piece stores the piece that has to be positioned on the board. 
         # self.piece is None at first turn, i.e. at the beginning of the game.
         
-        if self.piece is not None:  # current move is not move 0
+        if self.piece is not None:
             # play the current piece on the board
             valid = self.game.play(piece=self.piece, position=position, next_piece=next)
 
@@ -84,13 +84,13 @@ class QuartoEnv(gym.Env):
             else:
                 # a valid move was played
                 reward = 0
-
+        
         # Process the next piece
         self.piece = next
-
+        
         return self._observation, reward, self.done, info
 
-    def render(self, mode, **kwargs):
+    def render(self, mode:str="human", **kwargs):
         for row in self.game.board:
             s = ""
             for piece in row:
@@ -99,12 +99,13 @@ class QuartoEnv(gym.Env):
                 else:
                     s += str(piece) + " "
             print(s)
-        print(f"Next: {self.piece}, Free: {''.join(str(p) for p in self.game.available_pieces)}")
-        print()
+        print(f"Next: {str(self.piece)}, Free: {'/'.join(str(p) for p in self.game.available_pieces)}")
 
     @property
     def legal_actions(self):
+        """Returns available positions"""
         return self.game.get_valid_actions()
+
 
     def __del__(self):
         self.close()
@@ -185,7 +186,6 @@ class MoveEncoderV0(gym.ActionWrapper):
         
         return position_index, piece_index
 
-
     def decode(self, action:Tuple[int, int])->Tuple[tuple, QuartoPiece]:
         """Decode an action from the actual MultiDiscrete action space. Here, action is an iterable of the type (position, piece),
         where both position and piece are integers. Converts the integer position into (x, y) coordinates and the integer piece 
@@ -210,38 +210,60 @@ class MoveEncoderV0(gym.ActionWrapper):
             piece = QUARTO_DICT[piece]
         return position, piece
 
-class QuartoEnvV0(QuartoEnv):
+class RandomOpponentEnv(QuartoEnv):
     """
     Quarto Env supporting move encoding
     That's a subclass and not a wrapper.
+    Moreover, this class also models a random opponent always playing valid moves.
     """
 
-    def __init__(self):
-        super(QuartoEnvV0, self).__init__()
+    def __init__(self, render_opponent:bool=False):
         """
-        Observation space observed at various 
-        """
-        # observation space: describes board + player hand 
-        # board described as 16 cells in which one can find a piece (0-15) or nothing (16)
-        # same goes with hand, either a piece (0-15) or nothing (16)
-        self.observation_space = MultiDiscrete([16+1] * 16+1)
+        State space: describes board + player hand 
+                           board described as 16 cells in which one can find a piece (0-15) or nothing (16)
+                           same goes with hand, either a piece (0-15) or nothing (16)
         
-        # actions space: described as move played (cell played) and piece chosen from still
-        #                availables.
-        # 16: moves that can be chosen; 16: pieces that can be played
+        Actions space: described as move played (cell played) and piece chosen from still
+                       availables. 
+                       16: moves that can be chosen; 16: pieces that can be played
+        """
+        super().__init__()
+        # observation space ~ state space
+        self.observation_space = MultiDiscrete([16+1] * (16+1))
+        # action space
         self.action_space = MultiDiscrete([16, 16])
 
         # move encoder to take care of turning tuples/objects into integers
-        self.move_encoder = MoveEncoderV0()
+        self.move_encoder = MoveEncoderV0(env=super())
+        self.render_opponent = render_opponent
 
     def step(self, action:Tuple[int,int]):
         """Steps the environment given an action"""
         # decoding and unpacking action
         position, next = self.move_encoder.decode(action=action)
-        # performing action on env
-        return super(QuartoEnvV0, self).step((position, next))
+        # performing agent's action on env
+        # agent_ply
+        agent_obs, agent_reward, agent_done, agent_info = super().step((position, next))
+        last_obs, last_done = agent_obs, agent_done
+        if not agent_done:
+            # opponent's reply
+            random_move = np.random.choice(self.game.get_valid_actions())
+            print("Opponent:")
+            print(f"\tPlays {self.piece.index} in {random_move[0]}")
+            print(f"\tChoses {random_move[1].index}")
 
-    @property
+            # stepping env with random player move - not interested in opponent's perspective
+            opp_obs, _, opp_done, _ = super().step(random_move)
+            last_obs, last_done = opp_obs, opp_done
+            
+            if self.render_opponent: 
+                self.render()
+
+        return last_obs, agent_reward, last_done, agent_info
+
     def legal_actions(self):
-        for game_action in super(QuartoEnvV0, self).legal_actions:
+        for game_action in super().legal_actions:
             yield self.move_encoder.encode(game_action)
+    
+    def get_observation(self): 
+        return self._observation
