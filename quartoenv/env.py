@@ -64,7 +64,7 @@ class QuartoEnv(gym.Env):
         # freecells are cells with no piece inside
         freecells = self.game.free_spots
         # available pieces are those that have not been put on the board
-        available_pieces = self.available_pieces() if self.available_pieces else [None]
+        available_pieces = self.available_pieces() if len(self.available_pieces()) > 0 else [None]
         # a legal action is of the kind ((x,y), QuartoPiece)
         return np.fromiter(product(freecells, available_pieces), dtype=tuple)
 
@@ -183,10 +183,9 @@ class MoveEncoderV0(gym.ActionWrapper):
         position, piece = action
         # convert (x, y) coordinates into a single integer
         position_index = position[0] * 4 + position[1]
+        # convert the Quarto piece into an integer.
         # piece is None during the last move, where there is no pieces left to choose.
-        if piece is not None:
-            # convert the Quarto piece into an integer.
-            piece_index = piece.index
+        piece_index = piece.index if piece is not None else None
         
         return position_index, piece_index
 
