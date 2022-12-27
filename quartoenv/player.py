@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 class Player: 
     def reset(self): 
-        ...
+        pass
 
     def seed(self, seed:int):
         random.seed(seed)
