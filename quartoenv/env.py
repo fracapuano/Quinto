@@ -29,6 +29,18 @@ class QuartoEnv(gym.Env):
     def done(self):
         return self.broken or self.game.game_over or self.game.draw
 
+    def available_pieces(self):
+        # retrieve the available pieces as difference between all pieces and pieces on the board
+        available_indices = set(range(16)) - set(self.game.board.flatten())
+        # remove also the piece in hand (if you have one)
+        if self.piece is not None:
+            available_indices = list(available_indices).remove(self.piece)
+
+        # retrieve the corresponding Quarto Piece
+        for index in available_indices:
+            yield QUARTO_DICT[index]
+
+
     def reset(self):
         """This function takes care of resetting the environment to initial state, 
         i.e. empty board with no pieces on."""
