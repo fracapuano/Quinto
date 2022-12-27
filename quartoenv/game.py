@@ -6,6 +6,7 @@ from itertools import product
 
 logger = logging.getLogger(__name__)
 
+
 class QuartoPiece:
     def __init__(self, number:int):
         """Every piece is described by a set of four binary attributes. 
@@ -29,31 +30,26 @@ class QuartoPiece:
         are_equal = self.tall == other.tall and self.hollow == other.hollow and self.dark == other.dark and self.round == other.round
         return are_equal
     
-    """TODO: Turn meaningless letters into Tall-Hollow-Dark-Round..."""
-    def __str__(self):
-        return {
-            (False, False, False, False): "A",
-            (False, False, False, True): "B",
-            (False, False, True, False): "C",
-            (False, False, True, True): "D",
-            (False, True, False, False): "E",
-            (False, True, False, True): "F",
-            (False, True, True, False): "G",
-            (False, True, True, True): "H",
-            (True, False, False, False): "a",
-            (True, False, False, True): "b",
-            (True, False, True, False): "c",
-            (True, False, True, True): "d",
-            (True, True, False, False): "e",
-            (True, True, False, True): "f",
-            (True, True, True, False): "g",
-            (True, True, True, True): "h"
-        }[self.tall, self.hollow, self.dark, self.round]
+    def __str__(self): 
+        piece_string = "-".join(
+            [
+                "Tall" if self.tall else "Short", 
+                "Hollow" if self.hollow else "Full", 
+                "Dark" if self.dark else "Light", 
+                "Round" if self.round else "Square"
+            ]
+        )
+        return piece_string
+    
+    def __hash__(self): 
+        return hash(str(self))
 
 # to each Quarto piece, we can access its index.
 # However, given an index, we cannot access the corresponding Quarto piece.
 # Hence, we create a dictionary which maps each integer into a Quarto piece.
-# In this way, we can always turn one into the other.
+# In this way, we can always turn one into the other without having to create multiple
+# useless instances of the same QuartoPiece.
+
 QUARTO_DICT = {
     idx: QuartoPiece(idx) for idx in range(16)
 }
@@ -82,6 +78,11 @@ class QuartoGame:
             # all pieces are available
             self.available_pieces = self.all_pieces
 
+    def pieces_from_board(self)->list: 
+        """This function returns the pieces currently on the board"""
+        flatten_board = self.board.flatten()
+        return list(map(lambda ind: None if ind==-1 else QUARTO_DICT[ind], flatten_board))
+
     def play(self, piece: QuartoPiece, position: int, next_piece: QuartoPiece) -> bool:
         """This function plays a move given piece and position as per game rules. Moreover, it also removes 
         a selected piece from the ones still available.
@@ -100,8 +101,7 @@ class QuartoGame:
         
         # check if piece is available
         if piece not in self.available_pieces:
-            logger.warn(f"Not placing a free piece, {piece}, {''.join(str(p) for p in self.free)}")
-            # still playing
+            logger.warn(f"Placing piece {piece.index} with available pieces {'/'.join(str(p.index) for p in self.available_pieces)}")
             return False
         
         # turning position into single coordinates
@@ -123,7 +123,7 @@ class QuartoGame:
         # This means the action you are playing is not valid.
         if not (self.game_over or self.draw) and next_piece not in self.available_pieces:
             # either pieces is empty (no more pieces from which to chose) or game is over
-            logger.warn(f"Next piece invalid, {next_piece}, {''.join(str(p) for p in self.free)}")
+            logger.warn(f"Next piece invalid, chosen {next_piece.index} but valid pieces where {'/'.join(str(p.index) for p in self.available_pieces)}")
             return False
         
         # you played a valid move. The game might also be finished.
