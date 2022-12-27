@@ -4,6 +4,8 @@ import logging
 import numpy as np
 from typing import Tuple
 from .game import QuartoGame, QuartoPiece, QUARTO_DICT
+from itertools import product
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -29,17 +31,42 @@ class QuartoEnv(gym.Env):
     def done(self):
         return self.broken or self.game.game_over or self.game.draw
 
-    def available_pieces(self):
+    def available_pieces(self)->list:
+        """This function returns the pieces currently available. Those are defined as all the pieces
+        available but the one each player has in hand and the ones on the board.
+        
+        Returns: 
+            list: List of integers representing (through QUARTO_DICT) QuartoPiece(s)."""
+
         # retrieve the available pieces as difference between all pieces and pieces on the board
-        available_indices = set(range(16)) - set(self.game.board.flatten())
-        # remove also the piece in hand (if you have one)
-        if self.piece is not None:
-            available_indices = list(available_indices).remove(self.piece)
-
-        # retrieve the corresponding Quarto Piece
-        for index in available_indices:
-            yield QUARTO_DICT[index]
-
+        all_pieces = set(self.game.all_pieces)
+        current_board, current_piece = self._observation
+        
+        board_pieces = set(
+            map(
+                lambda piece_index: None if piece_index==-1 else QUARTO_DICT[piece_index], 
+                current_board.flatten()
+                )
+            )
+        nonavailable_pieces = board_pieces | {current_piece}
+        # available pieces are all pieces but the ones on the board and in hand
+        available_pieces = all_pieces - nonavailable_pieces
+        
+        return available_pieces
+    
+    @property
+    def legal_actions(self)->np.array: 
+        """This function returns all the legal actions given the present state
+        
+        Returns: 
+            np.array: Array of (tuple, QuartoPiece) elements identifying viable actions.
+        """
+        # freecells are cells with no piece inside
+        freecells = self.game.free_spots
+        # available pieces are those that have not been put on the board
+        available_pieces = self.available_pieces() if self.available_pieces else [None]
+        # a legal action is of the kind ((x,y), QuartoPiece)
+        return np.fromiter(product(freecells, available_pieces), dtype=tuple)
 
     def reset(self):
         """This function takes care of resetting the environment to initial state, 
@@ -111,13 +138,7 @@ class QuartoEnv(gym.Env):
                 else:
                     s += str(piece) + " "
             print(s)
-        print(f"Next: {str(self.piece)}, Free: {'/'.join(str(p) for p in self.game.available_pieces)}")
-
-    @property
-    def legal_actions(self):
-        """Returns available positions"""
-        return self.game.get_valid_actions()
-
+        print(f"Next: {str(self.piece.index)}, Free: {'/'.join(str(p.index) for p in self.available_pieces())}")
 
     def __del__(self):
         self.close()
@@ -143,35 +164,6 @@ class MoveEncoderV0(gym.ActionWrapper):
             Tuple[tuple, QuartoPiece]: decoded action, as per `decode` function.
         """
         return self.decode(action)
-
-    @property
-    def legal_actions(self):
-        """Encode the valid actions.
-
-        Yields:
-            Iterable: encoded valid actions.
-        """
-        for action in self.game.get_valid_actions():
-            yield self.encode(action)
-
-    def action_masks(self)->tuple:
-        """This function returns masks for the currently available actions given the board state
-        
-        Returns: 
-            tuple: Masked positions and pieces for the given board configuration
-        """
-
-        # get valid positions
-        valid_positions = list(set([pos for pos, _ in self.legal_actions()]))
-        # convert valid positions (in their integer representation) to True
-        mask_pos = [i in valid_positions for i in range(16)]  # True when move is valid, else oth.
-
-        # get unique pieces
-        valid_pieces = list(set([piece for _, piece in self.legal_actions()]))
-        # convert valid pieces (in their integer representation) to True
-        mask_piece = [i in valid_pieces for i in range(16)]
-        
-        return (mask_pos, mask_piece)
 
     def encode(self, action:Tuple[tuple, QuartoPiece])->Tuple[int, int]:
         """Encode an action. Here, an action is a Tuple of ((x, y), QuartoPiece).
@@ -259,21 +251,26 @@ class RandomOpponentEnv(QuartoEnv):
         last_obs, last_done = agent_obs, agent_done
         if not agent_done:
             # opponent's reply
-            random_move = np.random.choice(self.game.get_valid_actions())
-            print("Opponent:")
-            print(f"\tPlays {self.piece.index} in {random_move[0]}")
-            print(f"\tChoses {random_move[1].index}")
-
+            random_move = self.move_encoder.decode(random.choice(list(self.legal_actions())))
             # stepping env with random player move - not interested in opponent's perspective
-            opp_obs, _, opp_done, _ = super().step(random_move)
+            opp_obs, _, opp_done, opp_info = super().step(random_move)
             last_obs, last_done = opp_obs, opp_done
             
+            if last_done: 
+                agent_info["loss"] = True
+                
             if self.render_opponent: 
                 self.render()
 
         return last_obs, agent_reward, last_done, agent_info
 
     def legal_actions(self):
+        """This function encodes the legal actions to turn tuples of ((x,y), QuartoPiece) into
+        (int, int)-encoded. 
+        
+        Yields: 
+            (int, int): Tuple encoding position and piece in their integer version.
+        """
         for game_action in super().legal_actions:
             yield self.move_encoder.encode(game_action)
     
