@@ -86,7 +86,7 @@ class RandomOpponentEnv(QuartoBase):
     
     def reset(self): 
         """Resets env"""
-        super().reset()
+        super().reset_state()
         return self._observation
     
     def step(self, action:Tuple[int,int]):
