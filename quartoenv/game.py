@@ -6,7 +6,6 @@ from itertools import product
 
 logger = logging.getLogger(__name__)
 
-
 class QuartoPiece:
     def __init__(self, number:int):
         """Every piece is described by a set of four binary attributes. 
