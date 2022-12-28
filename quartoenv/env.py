@@ -105,6 +105,5 @@ class RandomOpponentEnv(QuartoBase):
             
             if self.done: 
                 info["loss"] = True
-                reward = -100
 
         return self._observation, reward, self.done, info
