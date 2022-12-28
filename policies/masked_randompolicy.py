@@ -1,6 +1,7 @@
 import random
 from sb3_contrib.common.wrappers import ActionMasker
 from tqdm import tqdm
+from itertools import product, compress
 
 class MaskedRandomPolicy: 
 	def __init__(self, env:ActionMasker, verbose:int=1): 
@@ -23,7 +24,13 @@ class MaskedRandomPolicy:
 			done = False
 			obs = self.env.reset()
 			while not done:
-				possible_actions = list(self.env.action_masks())
+				# mask all actions
+				possible_actions = list(compress(product(range(16), range(16)), self.env.action_masks()))
+				# edge case: when we are left with only one position on the board. The move is "forced"
+				if len(possible_actions) == 0:
+					# the only available move can be found in the environment legal actions
+					possible_actions = list(self.env.legal_actions())
+				# choose one legal move at random
 				action = random.choice(possible_actions)
 				
 				if self.verbose > 1: 
