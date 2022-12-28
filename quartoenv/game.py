@@ -6,7 +6,6 @@ from itertools import product
 
 logger = logging.getLogger(__name__)
 
-
 class QuartoPiece:
     def __init__(self, number:int):
         """Every piece is described by a set of four binary attributes. 
@@ -101,7 +100,7 @@ class QuartoGame:
         
         # check if piece is available
         if piece not in self.available_pieces:
-            logger.warn(f"Placing piece {piece.index} with available pieces {'/'.join(str(p.index) for p in self.available_pieces)}")
+            # logger.warn(f"Placing piece {piece.index} with available pieces {'/'.join(str(p.index) for p in self.available_pieces)}")
             return False
         
         # turning position into single coordinates
@@ -111,7 +110,7 @@ class QuartoGame:
         logger.debug(f"Willing to play at ({x},{y})")
         if self.board[x, y] != -1:
             # cell is not empty
-            logger.warn(f"Not on a free spot {self.board[x, y]} at {x}, {y}")
+            # logger.warn(f"Not on a free spot {self.board[x, y]} at {x}, {y}")
             return False
         
         # play piece in position. On the board, we are not placing the QuartoPiece, but the corresponding index.
@@ -123,7 +122,7 @@ class QuartoGame:
         # This means the action you are playing is not valid.
         if not (self.game_over or self.draw) and next_piece not in self.available_pieces:
             # either pieces is empty (no more pieces from which to chose) or game is over
-            logger.warn(f"Next piece invalid, chosen {next_piece.index} but valid pieces where {'/'.join(str(p.index) for p in self.available_pieces)}")
+            # logger.warn(f"Next piece invalid, chosen {next_piece.index} but valid pieces where {'/'.join(str(p.index) for p in self.available_pieces)}")
             return False
         
         # you played a valid move. The game might also be finished.
