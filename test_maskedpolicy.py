@@ -5,7 +5,6 @@ from quartoenv import RandomOpponentEnv
 from sb3_contrib.common.wrappers import ActionMasker
 from itertools import product
 
-
 def mask_function(env: gym.Env) -> np.ndarray:
     """This function returns the encoding of the valid moves given the actual
     """
