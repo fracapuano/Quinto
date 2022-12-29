@@ -72,12 +72,12 @@ class QuartoBase(gym.Env):
             # check if played move makes the agent win
             elif self.game.game_over:
                 # We just won!
-                reward = 100
+                reward = +1
                 info['win'] = True
             
             # check draw
             elif self.game.draw:
-                reward = 20
+                reward = 0.2
                 info['draw'] = True
             else:
                 # a valid move was played
@@ -89,7 +89,7 @@ class QuartoBase(gym.Env):
         return self._observation, reward, self.done, info
 
     def render(self, mode:str="human", **kwargs):
-
+        "Renders board printing to standard output pieces in their encoding"
         for row in self.game.board:
             s = ""
             for piece in row:
