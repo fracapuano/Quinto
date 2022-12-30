@@ -43,7 +43,7 @@ def parse_args()->object:
     parser.add_argument("--save-model", default=False, type=boolean_string, help="Whether or not save the model currently trained")
 
     # TO BE REMOVED
-    parser.add_argument("--debug", default=True, type=boolean_string, help="Debug mode, ignore all configurations")                     
+    parser.add_argument("--debug", default=True, type=boolean_string, help="Debug mode, ignore all configurations")
     return parser.parse_args()
 
 args = parse_args()
