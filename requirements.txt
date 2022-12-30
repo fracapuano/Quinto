@@ -1,5 +1,6 @@
-gym==0.26.2
+gym==0.21
 numpy==1.21.5
 rich==13.0.0
 sb3_contrib==1.6.2
 stable_baselines3==1.6.2
+tqdm
