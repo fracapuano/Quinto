@@ -37,7 +37,7 @@ def parse_args()->object:
     parser.add_argument("--store-checkpoints", default=True, type = boolean_string, help="Whether or not to store partially-trained models. Recommended True for long trainings (>1e6 ts)")
     parser.add_argument("--evaluation-frequency", default=1e3, type = float, help="Frequency with which to evaluate policy against random fair opponent")
     parser.add_argument("--test-episodes", default=50, type=int, help="Number of test matches the agent plays during periodic evaluation")
-    parser.add_argument("--action-masking", default=True, type=boolean_string, help="Whether or not to perform action masking during training")
+    parser.add_argument("--action-masking", default=False, type=boolean_string, help="Whether or not to perform action masking during training")
     parser.add_argument("--losing-penalty", default=True, type=boolean_string, help="Whether or not to enforce a penalty (negative reward) for losing")
     parser.add_argument("--show-progressbar", default=True, type=boolean_string, help="Whether or not to display a progressbar during training")
     parser.add_argument("--save-model", default=False, type=boolean_string, help="Whether or not save the model currently trained")
