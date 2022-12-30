@@ -2,6 +2,18 @@ import random
 from sb3_contrib.common.wrappers import ActionMasker
 from rich.progress import track
 from itertools import product, compress
+import gym
+import numpy as np
+
+def mask_function(env: gym.Env) -> np.ndarray:
+    """This function returns the encoding of the valid moves given the actual
+    """
+    # work out all actions: [(0, 0), ..., (15, 15)]
+    all_actions = product(range(16), range(16))
+    # find all legal actions
+    legal_actions = list(env.legal_actions())
+  
+    return [action in legal_actions for action in all_actions]
 
 class MaskedRandomPolicy: 
 	def __init__(self, env:ActionMasker): 
@@ -19,12 +31,12 @@ class MaskedRandomPolicy:
 		"""
 		wincounter, drawcounter, losscounter, invalidcounter = 0, 0, 0, 0
 		
-		for episode in track(range(n_episodes)):
+		for episode in range(n_episodes):
 			done = False
 			_ = self.env.reset()
 			while not done:
 				# mask all actions
-				possible_actions = list(compress(product(range(16), range(16)), self.env.action_masks()))
+				possible_actions = list(compress(product(range(16), range(16)), mask_function(self.env)))
 				# edge case: when we are left with only one position on the board. The move is "forced"
 				if len(possible_actions) == 0:
 					# the only available move can be found in the environment legal actions
@@ -49,6 +61,7 @@ class MaskedRandomPolicy:
 				invalidcounter += 1
 		
 		if verbose:
+			print(f"Out of {n_episodes} testing episodes:")
 			print("Playing against a random opponent:")
 			print("\t(%) games ended for an invalid move: {:.4f}".format(100 * invalidcounter/n_episodes))
 			print("\t(%) won games: {:.4f}".format(100 * wincounter/n_episodes))
