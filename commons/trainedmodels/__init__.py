@@ -3,8 +3,12 @@ from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 import os
 
 versions = ["v0", "v1"]
+# not saving 5e6 along the way to present results with reduced randomicity
 steps_dict = {
-    1e6: "1e6"
+    3000: "3e3",
+    1e6: "1e6",
+    3e6: "3e6", 
+    5e6: "5e6"
 }
 
 def select_model(algorithm:str, version:str="v0", training_timesteps:float=1e6)->OnPolicyAlgorithm: 
@@ -29,7 +33,6 @@ def select_model(algorithm:str, version:str="v0", training_timesteps:float=1e6)-
     # select particular number of steps
     trained_model += "_" + steps_dict[training_timesteps] + ".mdl"
     try: 
-        algoitems = AlgoDict.items()
         # accessing the algorithm object given the string
         algo = list(AlgoDict.keys())[list(AlgoDict.values()).index(algorithm)]
         # return trained model using stable_baselines3 API
