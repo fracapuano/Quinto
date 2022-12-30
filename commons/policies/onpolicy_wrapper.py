@@ -53,6 +53,7 @@ class OnPolicy:
         
         if verbose: 
             print(f"Out of {n_episodes} testing episodes:")
+            print("Playing against a random opponent:")
             print("\t (%) games ended for an invalid move: {:.4f}".format(100 * invalidcounter/n_episodes))
             print("\t (%) games won by the agent: {:.4f}".format(100*wincounter/n_episodes))
             print("\t (%) games drawn: {:.4f}".format(100*drawcounter/n_episodes))
