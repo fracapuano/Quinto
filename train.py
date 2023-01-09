@@ -1,5 +1,5 @@
 from commons.policies import reverseAlgoDict, AlgoDict, mask_function, ActionMasker
-from commons.quartoenv import RandomOpponentEnv, RandomOpponentEnv_V1
+from commons.quartoenv import RandomOpponentEnv, RandomOpponentEnv_V1, RandomOpponentEnv_V2
 from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
 from stable_baselines3.common.callbacks import CheckpointCallback, EveryNTimesteps
@@ -58,6 +58,7 @@ evaluation_frequency=args.evaluation_frequency
 test_episodes=args.test_episodes
 action_masking=args.action_masking
 losing_penalty=args.losing_penalty
+duration_penalty=args.duration_penalty
 show_progressbar=args.show_progressbar
 save_model=args.save_model
 
@@ -71,6 +72,7 @@ if args.debug:
     test_episodes=5
     action_masking=True
     losing_penalty=True
+    duration_penalty=True
     show_progressbar=True
     save_model=True
 
@@ -90,6 +92,9 @@ def main():
     if losing_penalty:
         env = RandomOpponentEnv_V1()
         version = "v1"
+        if duration_penalty: 
+            env = RandomOpponentEnv_V2()
+            version = "v2"
     else: 
         env = RandomOpponentEnv()
         version = "v0"
