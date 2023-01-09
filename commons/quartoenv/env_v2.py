@@ -98,7 +98,7 @@ class RandomOpponentEnv_V2(QuartoBase):
         # agent_ply
         _, reward, _, info = super().step((position, next))
         # penalizing long games (a long win is 40% less good than a quick win)
-        reward -= (8-4)/0.6 if info["turns"]>=8 else 0
+        reward -= (8-4)/0.6 if info["turn"]>=8 else 0
 
         if not self.done:
             # opponent's reply
