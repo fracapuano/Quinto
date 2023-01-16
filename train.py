@@ -16,7 +16,9 @@ trainsteps_dict = {
     3000: "3e3",
     1e6: "1e6",
     3e6: "3e6", 
-    5e6: "5e6"
+    5e6: "5e6",
+    50e6: "50e6",
+    100e6: "100e6"
 }
 
 def boolean_string(s):
