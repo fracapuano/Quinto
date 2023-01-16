@@ -45,6 +45,9 @@ def parse_args()->object:
     parser.add_argument("--duration-penalty", default=True, type=boolean_string, help="Whether or not to enforce a penalty (negative reward) on long games")
     parser.add_argument("--show-progressbar", default=True, type=boolean_string, help="Whether or not to display a progressbar during training")
     parser.add_argument("--save-model", default=False, type=boolean_string, help="Whether or not save the model currently trained")
+    parser.add_argument("--resume-training", default=False, type=boolean_string, help="Whether or not load and keep train an already trained model")
+    parser.add_argument("--model-path", default=None, type=str, help="Path to which the model to incrementally train is stored")
+
 
     # TO BE REMOVED
     parser.add_argument("--debug", default=True, type=boolean_string, help="Debug mode, ignore all configurations")
@@ -64,6 +67,8 @@ losing_penalty=args.losing_penalty
 duration_penalty=args.duration_penalty
 show_progressbar=args.show_progressbar
 save_model=args.save_model
+resume_training=args.resume_training
+model_path=args.model_path
 
 if args.debug: 
     algorithm = "maskedPPO"
@@ -136,7 +141,33 @@ def main():
     callback_list = list(compress(callback_list, callback_mask))
 
     # training the model with train_timesteps
-    model.learn(total_timesteps=train_timesteps, callback=callback_list, progress_bar=show_progressbar)
+    if not resume_training:
+        model.learn(total_timesteps=train_timesteps, callback=callback_list, progress_bar=show_progressbar)
+    
+    elif resume_training and action_masking:
+        # only resuming training of
+        remaining_training_steps = int(float(input("Please enter new number of training steps: ")))
+    
+        model = MaskablePPO.load(model_path)
+        env = RandomOpponentEnv_V2()
+        env = ActionMasker(env, mask_function)
+        version = "v2"
+
+        model.set_env(env=env)
+
+        model_name = algorithm.upper() + version + "_" + trainsteps_dict[train_timesteps]
+
+        print("'Resuming' training...")
+        model.learn(
+            remaining_training_steps, 
+            reset_num_timesteps=False, 
+            callback=callback_list,
+            progress_bar=show_progressbar
+            )
+
+    else: 
+        raise ValueError("Resume-training is implemented for MaskablePPO only!")
+        
     if save_model: 
         model.save(f"commons/trainedmodels/{model_name}.mdl")
 
