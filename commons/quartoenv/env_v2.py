@@ -47,6 +47,17 @@ class RandomOpponentEnv_V2(QuartoBase):
         
         return np.append(arr=board_pieces, values=hand_piece)
     
+    def reward_function(self, info:dict)->float:
+        """Computes the reward at timestep `t` given the corresponding info dictionary (output of gym.Env.step() method)"""
+        if info["win"]:  # fostering quicker wins
+            return 5 - (np.floor(info["turn"]/2)-4) * 0.75
+        elif info["draw"]:
+            return 0.5
+        elif info.get("loss", None):
+            return -1  # larger reward when winning than losing
+        else:
+            return 0
+
     def available_pieces(self)->list:
         """This function returns the pieces currently available. Those are defined as all the pieces
         available but the one each player has in hand and the ones on the board.
@@ -96,11 +107,7 @@ class RandomOpponentEnv_V2(QuartoBase):
         # performing agent's action on env
         
         # agent_ply
-        _, reward, _, info = super().step((position, next))
-        # penalizing long games (a long win is 40% less good than a quick win)
-        reward -= (8-4)/0.6 if info["turn"]>=8 else 0
-        # incentivizing more wins
-        reward += +5 if info["win"] else 0
+        _, _, _, info = super().step((position, next))
 
         if not self.done:
             # opponent's reply
@@ -110,6 +117,6 @@ class RandomOpponentEnv_V2(QuartoBase):
             
             if self.done: 
                 info["loss"] = True
-                reward = -1
-
+        
+        reward = self.reward_function(info=info)
         return self._observation, reward, self.done, info
