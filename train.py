@@ -1,12 +1,14 @@
 from commons.policies import reverseAlgoDict, AlgoDict, mask_function, ActionMasker
-from commons.quartoenv import RandomOpponentEnv, RandomOpponentEnv_V1, RandomOpponentEnv_V2
+from commons.quartoenv import RandomOpponentEnv, RandomOpponentEnv_V1, RandomOpponentEnv_V2, CustomOpponentEnv_V3
 from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
 from sb3_contrib.ppo_mask import MaskablePPO
 from stable_baselines3.common.callbacks import CheckpointCallback, EveryNTimesteps
-from commons.utils import WinPercentageCallback
+from commons.utils import WinPercentageCallback, UpdateOpponentCallback
 from itertools import compress
 import numpy as np
 import random
+import wandb
+from wandb.integration.sb3 import WandbCallback
 
 import argparse
 
@@ -47,7 +49,8 @@ def parse_args()->object:
     parser.add_argument("--save-model", default=False, type=boolean_string, help="Whether or not save the model currently trained")
     parser.add_argument("--resume-training", default=False, type=boolean_string, help="Whether or not load and keep train an already trained model")
     parser.add_argument("--model-path", default=None, type=str, help="Path to which the model to incrementally train is stored")
-
+    parser.add_argument("--use-symmetries", default=True, type=boolean_string, help="Whether or not let the agent exploit the game symmetries")
+    parser.add_argument("--self-play", default=False, type=boolean_string, help="Whether or not to let the agent play against checkpointed copies of itself")
 
     # TO BE REMOVED
     parser.add_argument("--debug", default=True, type=boolean_string, help="Debug mode, ignore all configurations")
@@ -69,6 +72,8 @@ show_progressbar=args.show_progressbar
 save_model=args.save_model
 resume_training=args.resume_training
 model_path=args.model_path
+use_symmetries=args.use_symmetries
+self_play=args.self_play
 
 if args.debug: 
     algorithm = "maskedPPO"
@@ -83,12 +88,16 @@ if args.debug:
     duration_penalty=True
     show_progressbar=True
     save_model=True
+    use_symmetries=True
+    self_play=False
 
 def main(): 
     # reproducibility - random seed setted
     seed = 777
     np.random.seed(seed)
     random.seed(seed)
+
+    logwandb = True
 
     # input sanity check
     if not action_masking:
@@ -103,7 +112,15 @@ def main():
         if duration_penalty: 
             env = RandomOpponentEnv_V2()
             version = "v2"
-    else: 
+            if use_symmetries:
+                env = CustomOpponentEnv_V3()
+                version = "v3"
+                # creating an opponent from the one given in model path - opponent does always play legit moves
+                opponent = MaskablePPO.load(model_path)
+                opponent.set_env(env=env)
+                # using this opponent to perform adversarial learning
+                env.update_opponent(new_opponent=opponent)
+    else:
         env = RandomOpponentEnv()
         version = "v0"
 
@@ -125,20 +142,47 @@ def main():
 
     # saving model every 5e5 timesteps
     checkpoint_save = CheckpointCallback(
-        save_freq=500_000, save_path="checkpoints/", name_prefix=f"{algorithm}"
+        save_freq=1_000_000, save_path="checkpoints/", name_prefix=f"{algorithm}"
     )
     # saving the percentage of wins a model can achieve in n_episodes
     winpercentage = WinPercentageCallback(env=env, n_episodes=test_episodes, logfile=f"logs/{model_name}_logfile.txt")
+    # levelling up competitiveness during training
+    update_opponent = UpdateOpponentCallback(checkpoints_dir="checkpoints/")
     # evaluating the environment periodically every evaluation_frequency timesteps
     evaluation_callback = EveryNTimesteps(n_steps=evaluation_frequency, callback=winpercentage)
+    # updating the competitiveness of the agents' environemnt during training
+    selfplay_callback = EveryNTimesteps(n_steps=2_000_000, callback=update_opponent)
 
     callback_list = [
         checkpoint_save, 
-        evaluation_callback
+        evaluation_callback,
+        selfplay_callback
     ]
-    callback_mask = [store_checkpoints, evaluate_while_training]
+    callback_mask = [store_checkpoints, evaluate_while_training, self_play, logwandb]
     # masking callbacks considering script input
     callback_list = list(compress(callback_list, callback_mask))
+
+    training_config = {
+    "version": version,
+    "model": algorithm.upper(),
+    "total_timesteps": train_timesteps,
+    "losing_penalty": losing_penalty, 
+    "duration_penalty": duration_penalty, 
+    "use_symmetries": use_symmetries,
+    "action_masking": action_masking
+    }
+
+    if logwandb: 
+        run = wandb.init(
+        project="QuartoRL-v3 training",
+        config=training_config,
+        sync_tensorboard=True,  
+        monitor_gym=True,
+        save_code=True
+        )
+        # using W&B during training
+        wand_callback = WandbCallback(verbose=2, gradient_save_freq=500)
+        callback_list.append(wand_callback)
 
     # training the model with train_timesteps
     if not resume_training:
