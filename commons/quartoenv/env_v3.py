@@ -4,9 +4,9 @@ from gym.spaces import MultiDiscrete
 import logging
 import numpy as np
 from typing import Tuple
-from utils import apply_symmetries
+from commons.utils import apply_symmetries
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
-from policies.onpolicy_wrapper import mask_function
+from commons.policies.onpolicy_wrapper import mask_function
 
 logger = logging.getLogger(__name__)
 
