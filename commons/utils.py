@@ -140,6 +140,53 @@ class QuartoPolicy:
         """Tests considered policy over `n_episodes`"""
         return self._policy.test_policy(n_episodes=n_episodes, verbose=verbose)
 
+def givens_matrix(degree:float)->np.array:
+    """This function creates the Givens matrix corresponding to a rotation of `degrees`"""
+    # turning degrees to radiants
+    rad = np.deg2rad(degree)
+    # rotations matrix elements
+    c, s = np.cos(rad), np.sin(rad)
+    G = np.array([
+        [c, -s], 
+        [s, c]
+    ])
+    return G
+
+def clock_rotation(x:float, y:float, degree:float)->np.array: 
+    """Applies clock-wise rotation on the vector whose components are x and y.
+    This is done in the sake of restoring the points obtained in the original space.
+    
+    Args:
+        x (float): x-coordinate of the point considered.
+        y (float): y-coordinate of the point considered.
+        degree (float): degree in which to perform the rotation. When positive, rotation is `clockwise`.
+    
+    Returns:
+        (np.array): point in the new, rotated, space.
+    """
+    G_clock = givens_matrix(degree=-degree)
+    rotated = np.array([x,y])
+    return G_clock @ rotated
+
+def antiflip(x,y, verse:str):
+    """Applies anti-flipping operation on the vector whose components are x and y.
+    This is done in the sake of restoring the points obtained in the original space.
+    
+    Args:
+        x (float): x-coordinate of the point considered.
+        y (float): y-coordinate of the point considered.
+        verse (str): verse in which to rotate once more the point considered.
+    
+    Returns:
+        (np.array): point in the new, un-flipped, space.
+    """
+    if verse.lower()=="horizontal" or verse.lower()=="h":
+        return np.array([3-x,y])
+    elif verse.lower()=="vertical" or verse.lower()=="v":
+        return np.array([x,3-y])
+    else:
+        raise ValueError("Anti-Flip operations are diagonally and horizontally only!")
+    
 def apply_symmetries(board:np.array)->Tuple[np.array, list, list]:
     """This function applies the Quarto game symmetries to a given board, returning the board considered
     and the function that can be used to re-obtain original form (i.e., the function that when applied on apply_symmetries output
@@ -168,32 +215,30 @@ def apply_symmetries(board:np.array)->Tuple[np.array, list, list]:
     # Define inverse symmetries
     inverse_symmetries = {
         # Rotate -90 degrees (270 degrees)
-        "rot90": lambda x: np.rot90(x, k=3),
+        "rot90": lambda x,y : clock_rotation(x,y, degree=90),
         # Rotate -180 degrees (180 degrees)
-        "rot180": lambda x: np.rot90(x, k=2),
+        "rot180": lambda x,y: clock_rotation(x,y, degree=180),
         # Rotate -270 degrees (90 degrees)
-        "rot270": lambda x: np.rot90(x, k=3),
+        "rot270": lambda x,y: clock_rotation(x,y, degree=270),
         # Reflect horizontally, once more
-        "h_flip": lambda x: np.fliplr(x),
+        "h_flip": lambda x,y: antiflip(x,y, verse="horizontal"),
         # Reflect vertically, once more
-        "v_flip": lambda x: np.flipud(x)
+        "v_flip": lambda x,y: antiflip(x,y, verse="vertical")
     }
-
     inv_symmetries = []
     applied_symmetries = []
-    
     # applies symmetries
+    canonical_board = board
     for name, symmetry in symmetries.items():
         # applies the symmetry
         sym_board = symmetry(board)
-        # stores the reflected (updated board state)
-        applied_symmetries.append(sym_board)
-        # stores the new symmetrical representation
-        inv_symmetries.append(inv_symmetries[name])
+        # stores the reflected (updated board state) only when they reduce the value of the board
+        if (sym_board[0,0] <= canonical_board[0,0]):
+            canonical_board=sym_board
+            # stores the new symmetrical representation
+            inv_symmetries.append(inverse_symmetries[name])
 
     canonical_board = min(applied_symmetries)
-    applied_idxs = applied_symmetries.index(canonical_board)
+
 
     return canonical_board, list(symmetries.values()).index(canonical_board), reversed(inv_symmetries.index())
-
-"""TODO: Implement (x,y)_canonical to (x,y)_original having the list of applied symmetries"""
