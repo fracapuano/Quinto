@@ -135,3 +135,6 @@ dmypy.json
 
 # wandb
 wandb/
+
+# tensorboard
+/tensorboard/
