@@ -9,6 +9,8 @@ import numpy as np
 import random
 import wandb
 from wandb.integration.sb3 import WandbCallback
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 import argparse
 
