@@ -77,9 +77,9 @@ self_play=args.self_play
 
 if args.debug: 
     algorithm = "maskedPPO"
-    verbose=0
+    verbose=2
     train_timesteps=3000
-    evaluate_while_training=True
+    evaluate_while_training=False
     store_checkpoints=True
     evaluation_frequency=10
     test_episodes=5
@@ -132,8 +132,9 @@ def main():
         model = MaskablePPO(
             MaskableActorCriticPolicy, 
             env=env, 
-            verbose=verbose, 
-            seed=seed
+            verbose=verbose,
+            seed=seed,
+            tensorboard_log=f"logs/tensorboard.id"
         )
     else: 
         model_function = reverseAlgoDict[algorithm.upper()]
