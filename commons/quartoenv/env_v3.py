@@ -4,9 +4,11 @@ from gym.spaces import MultiDiscrete
 import logging
 import numpy as np
 from typing import Tuple
-from commons.utils import apply_symmetries
+from commons.utils import QuartoSymmetries
 from stable_baselines3.common.on_policy_algorithm import OnPolicyAlgorithm
 from commons.policies.onpolicy_wrapper import mask_function
+from .game import QUARTO_DICT
+from itertools import product
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,8 @@ class CustomOpponentEnv_V3(QuartoBase):
         self._opponent = None
         self.symmetric = True
 
+        self.symmetries = QuartoSymmetries()
+
     @property
     def opponent(self):
         """Getter method to retrieve opponent"""
@@ -64,7 +68,7 @@ class CustomOpponentEnv_V3(QuartoBase):
         # unpacking parent observation
         board, current_piece = parent_obs
         # obtain canonical form of board (that is, the symmetries-invariant board)
-        board, inverse_symmetries = apply_symmetries(board=board)
+        board, inverse_symmetries = self.symmetries.apply_symmetries(board=board)
         # store inverse symmetries (to reconstruct original board + modification)
         self.inverse_symmetries = inverse_symmetries
         # turning parent observation into a point of the observation space here defined
@@ -100,6 +104,24 @@ class CustomOpponentEnv_V3(QuartoBase):
         
         return available_pieces
 
+    def legal_actions(self): 
+        """This function returns all the legal actions given the present state encoded as int-int tuples.
+        
+        Yields: 
+            (int, int): Tuple encoding position and piece in their integer version.
+        """
+        # freecells are cells with no piece inside
+        freecells = self.game.free_spots
+        # available pieces are those that have not been put on the board
+        available_pieces = list(
+            map(lambda el: QUARTO_DICT[el], self.available_pieces())) \
+                if len(self.available_pieces()) > 0 \
+                else [None]
+        
+        # a legal action is of the kind ((x,y), QuartoPiece)
+        for legal_action in product(freecells, available_pieces): 
+            yield self.move_encoder.encode(legal_action)
+
     def get_observation(self): 
         return self._observation
     
@@ -112,24 +134,26 @@ class CustomOpponentEnv_V3(QuartoBase):
         """Steps the environment given an action"""
         # decoding and unpacking action
         position, next = self.move_encoder.decode(action=action)
-        # performing agent's action on env
-        
+        # agent choses played position in a symmetric space too so move shall be decoded
+        for inverse_symmetry in self.inverse_symmetries: 
+            position = inverse_symmetry(*position)
+    
         # agent_ply
         _, _, _, info = super().step((position, next))
 
         if not self.done:
-            # retrieving a non symmetric observation for the env
-            nonsymmetric_obs = self._observation
-            for inverse_sym in self.inverse_symmetries:
-                nonsymmetric_obs = inverse_sym(nonsymmetric_obs)
-
             # opponent's reply
-            opponent_action = self._opponent.predict(
-                observation=nonsymmetric_obs, 
-                action_masks = mask_function(self.env)
+            opponent_action, _ = self._opponent.predict(
+                observation=self._observation, 
+                action_masks = mask_function(self)
                 )
+            # mapping opponent moves to the usual (tuple, int) representation
+            opponent_pos, opponent_piece = self.move_encoder.decode(action=opponent_action)
+            # opponent choses played position in a symmetric space too so move shall be decoded
+            for inverse_symmetry in self.inverse_symmetries: 
+                opponent_pos = inverse_symmetry(*opponent_pos)
             # stepping env with opponent player move - not interested in opponent's perspective
-            super().step(opponent_action)
+            super().step((opponent_pos, opponent_piece))
             
             if self.done: 
                 info["loss"] = True
