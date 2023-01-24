@@ -89,7 +89,7 @@ if args.debug:
     show_progressbar=True
     save_model=True
     use_symmetries=True
-    self_play=False
+    self_play=True
     model_path="commons/trainedmodels/MASKEDPPOv1_5e6.zip"
 
 def main(): 
@@ -97,6 +97,9 @@ def main():
     seed = 777
     np.random.seed(seed)
     random.seed(seed)
+
+    checkpoint_frequency = 250_000
+    opponent_update_frequency = 500_000
 
     logwandb = True
 
@@ -144,7 +147,7 @@ def main():
 
     # saving model every 5e5 timesteps
     checkpoint_save = CheckpointCallback(
-        save_freq=1_000_000, save_path="checkpoints/", name_prefix=f"{algorithm}"
+        save_freq=checkpoint_frequency, save_path="checkpoints/", name_prefix=f"{algorithm}"
     )
     # saving the percentage of wins a model can achieve in n_episodes
     winpercentage = WinPercentageCallback(env=env, n_episodes=test_episodes, logfile=f"logs/{model_name}_logfile.txt")
@@ -153,14 +156,14 @@ def main():
     # evaluating the environment periodically every evaluation_frequency timesteps
     evaluation_callback = EveryNTimesteps(n_steps=evaluation_frequency, callback=winpercentage)
     # updating the competitiveness of the agents' environemnt during training
-    selfplay_callback = EveryNTimesteps(n_steps=2_000_000, callback=update_opponent)
+    selfplay_callback = EveryNTimesteps(n_steps=opponent_update_frequency, callback=update_opponent)
 
     callback_list = [
         checkpoint_save, 
         evaluation_callback,
         selfplay_callback
     ]
-    callback_mask = [store_checkpoints, evaluate_while_training, self_play, logwandb]
+    callback_mask = [store_checkpoints, evaluate_while_training, self_play]
     # masking callbacks considering script input
     callback_list = list(compress(callback_list, callback_mask))
 
