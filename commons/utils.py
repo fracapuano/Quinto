@@ -86,9 +86,10 @@ class UpdateOpponentCallback(BaseCallback):
         :return: (bool) If the callback returns False, training is aborted early.
         """
         # access last element in listdir - usually mostly trained agent ~ best available
-        candidate = MaskablePPO.load(os.listdir(self.checkpoint_dir)[-1])
+        candidate_model = sorted(os.listdir(self.checkpoint_dir), key=lambda name: int(name.split(".")[0].split("_")[1]))[-1]
+        candidate = MaskablePPO.load("checkpoints/" + candidate_model)
         # updating the current opponent with new candidate
-        self.model.env.update_opponent(candidate)
+        self.model.env.envs[0].update_opponent(candidate, name = candidate_model)
 
         return True
 
