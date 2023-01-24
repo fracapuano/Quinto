@@ -90,6 +90,7 @@ if args.debug:
     save_model=True
     use_symmetries=True
     self_play=False
+    model_path="commons/trainedmodels/MASKEDPPOv1_5e6.zip"
 
 def main(): 
     # reproducibility - random seed setted
@@ -116,7 +117,7 @@ def main():
                 env = CustomOpponentEnv_V3()
                 version = "v3"
                 # creating an opponent from the one given in model path - opponent does always play legit moves
-                opponent = MaskablePPO.load(model_path)
+                opponent = MaskablePPO.load(model_path, env=env, custom_objects={'learning_rate': 0.0, "clip_range": 0.0, "lr_schedule":0.0})
                 opponent.set_env(env=env)
                 # using this opponent to perform adversarial learning
                 env.update_opponent(new_opponent=opponent)
@@ -213,7 +214,7 @@ def main():
         raise ValueError("Resume-training is implemented for MaskablePPO only!")
         
     if save_model: 
-        model.save(f"commons/trainedmodels/{model_name}.mdl")
+        model.save(f"commons/trainedmodels/{model_name}.zip")
 
 if __name__ == "__main__": 
     main()
