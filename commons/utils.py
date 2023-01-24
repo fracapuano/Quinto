@@ -142,7 +142,7 @@ class QuartoPolicy:
 
 def anti90(x:int, y:int)->tuple:
     """Maps points after a 90-degrees rotation to their original representation."""
-    return y, x+4
+    return y, 3-x
 
 def clock_rotation(x:int, y:int, degree:float)->tuple: 
     """Applies clock-wise rotation on the vector whose components are x and y.
@@ -160,9 +160,9 @@ def clock_rotation(x:int, y:int, degree:float)->tuple:
     if degree==90.:
         return anti90(x,y)
     elif degree==180.:
-        return anti90(clock_rotation(x,y, degree=90))
+        return anti90(*clock_rotation(x,y, degree=90))
     elif degree==270.:
-        return anti90(clock_rotation(x,y, degree=180))
+        return anti90(*clock_rotation(x,y, degree=180))
     else:
         raise ValueError("Rotations for angles >270 are not yet implemented!")
 
@@ -189,6 +189,8 @@ class QuartoSymmetries:
     def __init__(self):
         # Define a list of all possible symmetries in a game of Quarto
         self.symmetries = {
+            # identity
+            "identity": lambda x: x,
             # Rotate 90 degrees
             "rot90": lambda x: np.rot90(x, k=1),
             # Rotate 180 degrees
@@ -202,6 +204,8 @@ class QuartoSymmetries:
         }
         # Define inverse symmetries
         self.inverse_symmetries = {
+            # identity
+            "identity": lambda x,y: (x,y), 
             # Rotate -90 degrees (270 degrees)
             "rot90": lambda x,y : clock_rotation(x,y, degree=90),
             # Rotate -180 degrees (180 degrees)
@@ -240,4 +244,6 @@ class QuartoSymmetries:
                 applied_symmetries.append(name)
                 inv_symmetries.append(self.inverse_symmetries[name])
 
-        return canonical_board, list(reversed(inv_symmetries))
+        if not inv_symmetries:
+            inv_symmetries.append(self.inverse_symmetries["identity"])
+        return canonical_board, [inv_symmetries[-1]]
