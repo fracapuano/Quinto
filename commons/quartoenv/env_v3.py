@@ -71,6 +71,8 @@ class CustomOpponentEnv_V3(QuartoBase):
         board, inverse_symmetries = self.symmetries.apply_symmetries(board=board)
         # store inverse symmetries (to reconstruct original board + modification)
         self.inverse_symmetries = inverse_symmetries
+        # store symmetric board (to be shared across the whole class)
+        self.symmetric_board = board
         # turning parent observation into a point of the observation space here defined
         board_pieces = np.fromiter(map(lambda el: 16 if el == -1 else el, board.flatten()), dtype=int)
         hand_piece = current_piece.index if current_piece else 16
@@ -111,7 +113,7 @@ class CustomOpponentEnv_V3(QuartoBase):
             (int, int): Tuple encoding position and piece in their integer version.
         """
         # freecells are cells with no piece inside
-        freecells = self.game.free_spots
+        freecells = np.argwhere(self.symmetric_board == -1)
         # available pieces are those that have not been put on the board
         available_pieces = list(
             map(lambda el: QUARTO_DICT[el], self.available_pieces())) \
