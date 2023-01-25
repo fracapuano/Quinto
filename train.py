@@ -98,8 +98,8 @@ def main():
     np.random.seed(seed)
     random.seed(seed)
 
-    checkpoint_frequency = 250_000
-    opponent_update_frequency = 500_000
+    checkpoint_frequency = 200_000
+    opponent_update_frequency = 400_000
 
     logwandb = True
 
