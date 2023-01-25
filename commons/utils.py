@@ -89,7 +89,7 @@ class UpdateOpponentCallback(BaseCallback):
         candidate_model = sorted(os.listdir(self.checkpoint_dir), key=lambda name: int(name.split(".")[0].split("_")[1]))[-1]
         candidate = MaskablePPO.load("checkpoints/" + candidate_model)
         # updating the current opponent with new candidate
-        self.model.env.envs[0].update_opponent(candidate, name = candidate_model)
+        self.model.env.envs[0].update_opponent(candidate)
 
         return True
 
