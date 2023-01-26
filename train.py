@@ -198,9 +198,19 @@ def main():
         remaining_training_steps = int(float(input("Please enter new number of training steps: ")))
     
         model = MaskablePPO.load(model_path)
-        env = RandomOpponentEnv_V2()
+        env = CustomOpponentEnv_V3()
+        version = "v3"
+        # creating an opponent from the one given in model path - opponent does always play legit moves
+        opponent = MaskablePPO.load(
+            model_path, 
+            env=env, 
+            custom_objects={'learning_rate': 0.0, "clip_range": 0.0, "lr_schedule":0.0}
+        )
+        opponent.set_env(env=env)
+        # using this opponent to perform adversarial learning
+        env.update_opponent(new_opponent=opponent)
         env = ActionMasker(env, mask_function)
-        version = "v2"
+        version = "v3"
 
         model.set_env(env=env)
 
@@ -208,7 +218,7 @@ def main():
 
         print("'Resuming' training...")
         model.learn(
-            remaining_training_steps, 
+            remaining_training_steps,
             reset_num_timesteps=False, 
             callback=callback_list,
             progress_bar=show_progressbar
