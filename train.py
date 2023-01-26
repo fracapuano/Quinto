@@ -98,8 +98,8 @@ def main():
     np.random.seed(seed)
     random.seed(seed)
 
-    checkpoint_frequency = 200_000
-    opponent_update_frequency = 400_000
+    checkpoint_frequency = 250_000
+    opponent_update_frequency = 500_000
 
     logwandb = True
 
@@ -174,7 +174,8 @@ def main():
     "losing_penalty": losing_penalty, 
     "duration_penalty": duration_penalty, 
     "use_symmetries": use_symmetries,
-    "action_masking": action_masking
+    "action_masking": action_masking,
+    "incremental": resume_training
     }
 
     if logwandb: 
@@ -200,6 +201,8 @@ def main():
         model = MaskablePPO.load(model_path)
         env = CustomOpponentEnv_V3()
         version = "v3"
+        env = ActionMasker(env, mask_function)
+        model.set_env(env=env)
         # creating an opponent from the one given in model path - opponent does always play legit moves
         opponent = MaskablePPO.load(
             model_path, 
@@ -209,10 +212,6 @@ def main():
         opponent.set_env(env=env)
         # using this opponent to perform adversarial learning
         env.update_opponent(new_opponent=opponent)
-        env = ActionMasker(env, mask_function)
-        version = "v3"
-
-        model.set_env(env=env)
 
         model_name = algorithm.upper() + version + "_" + trainsteps_dict[train_timesteps]
 
