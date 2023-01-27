@@ -49,7 +49,6 @@ class RandomPlayer(Player):
 class RLPlayer(Player):
     def __init__(self, quarto: Quarto, model = None) -> None:
         super().__init__(quarto)
-        # self.env = ActionMasker(RandomOpponentEnv_V2(), mask_function)
         self.env = RandomOpponentEnv_V2()
         if model:
             self.model = model
@@ -109,16 +108,28 @@ class RLPlayer(Player):
 
         self.action = (position, next_piece)
 
-    
-        
 
 def main():
     palmares = {0 : 0, -1 : 0, 1 : 0}
-    for _ in tqdm(range(500)):
+    for _ in tqdm(range(50)):
         game = Quarto()
-        player_A = RLPlayer(game, MaskablePPO.load(r'commons\trainedmodels\MASKEDPPOv2_100e6.zip'))
-        game.set_players((RandomPlayer(game), player_A))
-        # game.set_players((RandomPlayer(game), RLPlayer(game)))
+        player_A = RLPlayer(game, MaskablePPO.load(
+            'commons/trainedmodels/MASKEDPPOv2_100e6.zip', 
+            custom_objects = {
+            "learning_rate": 0.0,
+            "lr_schedule": lambda _: 0.0,
+            "clip_range": lambda _: 0.0,
+        }))
+        player_B = RLPlayer(game, MaskablePPO.load(
+            'maskedPPO_112250704_steps.zip', 
+            custom_objects = {
+            "learning_rate": 0.0,
+            "lr_schedule": lambda _: 0.0,
+            "clip_range": lambda _: 0.0,
+        }
+        ))
+        # game.set_players((player_A, player_B))
+        game.set_players((RandomPlayer(game), player_B))
         winner = game.run()
         # logging.warning(f"main: Winner: player {winner}")
         palmares[winner] += 1
