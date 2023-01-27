@@ -1,8 +1,8 @@
-ale_py==0.7.5
-gym==0.26.2
-numpy==1.21.5
-rich==13.2.0
-sb3_contrib==1.6.2
-stable_baselines3==1.6.2
-wandb==0.13.9
+ale_py
+gym
+numpy
+rich
+sb3_contrib
+stable_baselines3
+wandb
 tqdm
