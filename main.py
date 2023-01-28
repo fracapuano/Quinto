@@ -50,6 +50,10 @@ class RLPlayer(Player):
     def __init__(self, quarto: Quarto, model = None) -> None:
         super().__init__(quarto)
         self.env = RandomOpponentEnv_V2()
+        # setting random seed
+        random.seed(int(time.time()))
+        np.random.seed(int(time.time()))
+
         if model:
             self.model = model
         else:
@@ -109,7 +113,7 @@ class RLPlayer(Player):
 
 def main():
     palmares = {0 : 0, -1 : 0, 1 : 0}
-    for _ in tqdm(range(1000)):
+    for _ in tqdm(range(500)):
         game = Quarto()
         player_A = RLPlayer(game, MaskablePPO.load(
             'commons/trainedmodels/MASKEDPPOv2_100e6.zip', 
@@ -127,7 +131,7 @@ def main():
         }
         ))
         # game.set_players((player_A, player_B))
-        game.set_players((player_B, player_A))
+        game.set_players((player_A, player_B))
         winner = game.run()
         # logging.warning(f"main: Winner: player {winner}")
         palmares[winner] += 1
