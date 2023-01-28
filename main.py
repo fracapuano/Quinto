@@ -64,9 +64,7 @@ class RLPlayer(Player):
             12 : 3, 13 : 11, 14 : 7, 15 : 15,
             -1 : -1 
         }
-        random.seed(int(time.time()))
         
-
     def choose_piece(self) -> int:
         # we are just choosing a piece, so we don't care what we have in hand.
         # what we have in hand is actually placed on the board, so it is an old (and wrong)
@@ -111,7 +109,7 @@ class RLPlayer(Player):
 
 def main():
     palmares = {0 : 0, -1 : 0, 1 : 0}
-    for _ in tqdm(range(50)):
+    for _ in tqdm(range(1000)):
         game = Quarto()
         player_A = RLPlayer(game, MaskablePPO.load(
             'commons/trainedmodels/MASKEDPPOv2_100e6.zip', 
@@ -121,7 +119,7 @@ def main():
             "clip_range": lambda _: 0.0,
         }))
         player_B = RLPlayer(game, MaskablePPO.load(
-            'maskedPPO_112250704_steps.zip', 
+            'maskedPPO_117000704_steps.zip', 
             custom_objects = {
             "learning_rate": 0.0,
             "lr_schedule": lambda _: 0.0,
@@ -129,7 +127,7 @@ def main():
         }
         ))
         # game.set_players((player_A, player_B))
-        game.set_players((RandomPlayer(game), player_B))
+        game.set_players((player_B, player_A))
         winner = game.run()
         # logging.warning(f"main: Winner: player {winner}")
         palmares[winner] += 1
