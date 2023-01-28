@@ -136,7 +136,7 @@ def main():
         # logging.warning(f"main: Winner: player {winner}")
         palmares[winner] += 1
 
-        del game
+        del game, player_A, player_B
     
     print(palmares)
 
