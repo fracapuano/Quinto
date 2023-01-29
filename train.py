@@ -198,7 +198,7 @@ def main():
         # only resuming training of
         remaining_training_steps = int(float(input("Please enter new number of training steps: ")))
     
-        model = MaskablePPO.load(model_path)
+        model = MaskablePPO.load(model_path, tensorboard_log=f"logs/tensorboard.id")
         env = CustomOpponentEnv_V3()
         version = "v3"
         env = ActionMasker(env, mask_function)
