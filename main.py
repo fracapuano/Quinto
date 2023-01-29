@@ -123,7 +123,7 @@ def main():
             "clip_range": lambda _: 0.0,
         }))
         player_B = RLPlayer(game, MaskablePPO.load(
-            'commons/trainedmodels/MASKEDPPOv3_120e6.zip', 
+            'commons/trainedmodels/MASKEDPPOv3_130e6.zip', 
             custom_objects = {
             "learning_rate": 0.0,
             "lr_schedule": lambda _: 0.0,
