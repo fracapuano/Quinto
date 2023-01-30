@@ -3,6 +3,7 @@ from typing import Union
 from stable_baselines3.common.callbacks import BaseCallback
 import os
 from typing import Tuple
+import wandb
 
 class WinPercentageCallback(BaseCallback):
     """
@@ -64,6 +65,13 @@ class WinPercentageCallback(BaseCallback):
                     100 * invalidcounter / self.n_episodes
                 )
             )
+        wandb.log({
+            "Win(%)": 100 * wincounter / self.n_episodes,
+            "Loss(%)": 100 * losscounter / self.n_episodes,
+            "Draw(%)": 100 * drawcounter / self.n_episodes, 
+            "Invalid(%)": 100 * invalidcounter / self.n_episodes
+        })
+        
         return True
 
 class UpdateOpponentCallback(BaseCallback):

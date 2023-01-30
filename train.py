@@ -94,9 +94,9 @@ if args.debug:
 
 def main(): 
     # reproducibility - random seed setted
-    seed = 777
-    np.random.seed(seed)
-    random.seed(seed)
+    seed = None
+    # np.random.seed(seed)
+    # random.seed(seed)
 
     checkpoint_frequency = 250_000
     opponent_update_frequency = 500_000
