@@ -141,7 +141,7 @@ def main():
         # score results
         palmares[winner] += 1
 
-        del game, player_A, player_B
+        del game, playerRL
     
     print(palmares)
 
