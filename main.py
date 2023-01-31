@@ -4,10 +4,11 @@
 import logging
 import argparse
 import random
-from interface.quarto.objects import Player, Quarto
-from interface.quartoenv.env import RandomOpponentEnv
-from interface.quartoenv.env_v2 import RandomOpponentEnv_V2
-from interface.quartoenv.game import QuartoPiece
+from commons.quarto.objects import Player, Quarto
+from commons.quartoenv.env import RandomOpponentEnv
+from commons.quartoenv.env_v2 import RandomOpponentEnv_V2
+from commons.quartoenv.env_v3 import CustomOpponentEnv_V3
+from commons.quartoenv.game import QuartoPiece
 from sb3_contrib import MaskablePPO
 import numpy as np
 import time
@@ -49,10 +50,7 @@ class RandomPlayer(Player):
 class RLPlayer(Player):
     def __init__(self, quarto: Quarto, model = None) -> None:
         super().__init__(quarto)
-        self.env = RandomOpponentEnv_V2()
-        # setting random seed
-        random.seed(int(time.time()))
-        np.random.seed(int(time.time()))
+        self.env = CustomOpponentEnv_V3()  # symmetries-aware
 
         if model:
             self.model = model
@@ -62,11 +60,23 @@ class RLPlayer(Player):
         self.action = None
         # dictionary to convert ThePseudo pieces into ours.
         self.indices_dict = {
-            0 : 0, 1 : 8, 2 : 4, 3 : 12, 
-            4 : 2, 5 : 10, 6 : 6, 7 : 14,
-            8 : 1, 9 : 9, 10 : 5, 11 : 13,
-            12 : 3, 13 : 11, 14 : 7, 15 : 15,
-            -1 : -1 
+            0: 0, 
+            1: 8, 
+            2: 4, 
+            3: 12, 
+            4: 2, 
+            5: 10, 
+            6: 6, 
+            7: 14,
+            8: 1, 
+            9: 9, 
+            10: 5, 
+            11: 13,
+            12: 3, 
+            13: 11,
+            14: 7,
+            15: 15,
+            -1: -1
         }
         
     def choose_piece(self) -> int:
@@ -114,26 +124,21 @@ class RLPlayer(Player):
 def main():
     palmares = {0 : 0, -1 : 0, 1 : 0}
     for _ in tqdm(range(50)):
+        # create game
         game = Quarto()
-        player_A = RLPlayer(game, MaskablePPO.load(
-            'commons/trainedmodels/MASKEDPPOv2_100e6.zip', 
-            custom_objects = {
-            "learning_rate": 0.0,
-            "lr_schedule": lambda _: 0.0,
-            "clip_range": lambda _: 0.0,
-        }))
-        player_B = RLPlayer(game, MaskablePPO.load(
+        # create player
+        playerRL = player_B = RLPlayer(game, MaskablePPO.load(
             'commons/trainedmodels/MASKEDPPOv3_130e6.zip', 
             custom_objects = {
             "learning_rate": 0.0,
             "lr_schedule": lambda _: 0.0,
             "clip_range": lambda _: 0.0,
-        }
-        ))
-        # game.set_players((player_A, player_B))
-        game.set_players((player_A, player_B))
+        }))
+        # set players
+        game.set_players((RandomPlayer(game), playerRL))
+        # run a match
         winner = game.run()
-        # logging.warning(f"main: Winner: player {winner}")
+        # score results
         palmares[winner] += 1
 
         del game, player_A, player_B
