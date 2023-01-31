@@ -55,13 +55,16 @@ The `train.py` scripts makes usage of several arguments. For the sake of brevity
 In a nutshell, the arguments are used to differentiate the training process for what concerns the **reward function** used and the **opponent** challenged during the training process. Furthermore, a version of the training process which makes usage of the highly symmetric structure of the game is also available. In particular: 
 
 <center>
-| **_Environment version_** |            **_Reward Function_**            | **_Uses symmetries_** |       **_Opponent_**       |
-|:-------------------------:|:-------------------------------------------:|:---------------------:|:--------------------------:|
-|            `v0`           |             $r_T = (+1, +0.2, 0)$            |           No          | Valid-Moves-Only Random Opponent |
-|            `v1`           |            $r_T = (+1, +0.2, -1)$            |           No          | Valid-Moves-Only Random Opponent |
-|            `v2`           | $r_T = (5 - 0.75 \cdot (T/2 - 2), +0.5, -1)$ |           No          | Valid-Moves-Only Random Opponent |
-|            `v3`           | $r_T = (5 - 0.75 \cdot (T/2 - 2), +0.5, -1)$ |  Yes, rotational only |          Self-play         |
+    
+    | **_Environment version_** |            **_Reward Function_**            | **_Uses symmetries_** |       **_Opponent_**       |
+    |:-------------------------:|:-------------------------------------------:|:---------------------:|:--------------------------:|
+    |            `v0`           |             $r_T = (+1, +0.2, 0)$            |           No          | Valid-Moves-Only Random Opponent |
+    |            `v1`           |            $r_T = (+1, +0.2, -1)$            |           No          | Valid-Moves-Only Random Opponent |
+    |            `v2`           | $r_T = (5 - 0.75 \cdot (T/2 - 2), +0.5, -1)$ |           No          | Valid-Moves-Only Random Opponent |
+    |            `v3`           | $r_T = (5 - 0.75 \cdot (T/2 - 2), +0.5, -1)$ |  Yes, rotational only |          Self-play         |
 
+<\center>
+    
 Where $r_T$ indicates the reward obtained by the agent in the terminal state (namely, a state in which it wins, loses or draws the game). The elements of $r_T$ represent the reward obtained for winning, drawing and losing (respectively) a training game. 
 
 It is worth mentioning that $r_t = 0 \ \forall t \neq T$ ($r$ is, thefore, a *sparse* reward). 
@@ -78,17 +81,19 @@ Models' are saved in the `<ALGORITHM><VERSION>_<TRAININGTIMESTEPS>.zip` format, 
 For the sake of completeness, we also report here the time needed to train these models.
 
 <center>
-| **_Algorithm_** | **_Version_** | **_Timesteps_** | **_Training time_** |
-|:---------------:|:-------------:|:---------------:|:-------------------:|
-|     **PPO**     |       v0      |       5e6       |       _6h 29m_      |
-|     **PPO**     |       v1      |       5e6       |       _4h 34m_      |
-|     **A2C**     |       v0      |       5e6       |       _5h 43m_      |
-|     **A2C**     |       v1      |       5e6       |       _4h 52m_      |
-|  **MaskedPPO**  |       v0      |       5e6       |       _6h 27m_      |
-|  **MaskedPPO**  |       v1      |       5e6       |       _7h 28m_      |
-|  **MaskedPPO**  |       v2      |      100e6      |       _~1 week_      |
-|  **MaskedPPO**  |       v3      |   (100 + 20)e6  |   _~1 day, 3 hours_  |
+    
+    | **_Algorithm_** | **_Version_** | **_Timesteps_** | **_Training time_** |
+    |:---------------:|:-------------:|:---------------:|:-------------------:|
+    |     **PPO**     |       v0      |       5e6       |       _6h 29m_      |
+    |     **PPO**     |       v1      |       5e6       |       _4h 34m_      |
+    |     **A2C**     |       v0      |       5e6       |       _5h 43m_      |
+    |     **A2C**     |       v1      |       5e6       |       _4h 52m_      |
+    |  **MaskedPPO**  |       v0      |       5e6       |       _6h 27m_      |
+    |  **MaskedPPO**  |       v1      |       5e6       |       _7h 28m_      |
+    |  **MaskedPPO**  |       v2      |      100e6      |       _~1 week_      |
+    |  **MaskedPPO**  |       v3      |   (100 + 20)e6  |   _~1 day, 3 hours_  |
 
+<\center>
 
 Please note that the last model here is presented is nothing but a an instance of the the `MASKEDPPOv2_100e6` model incrementally trained with self-play and simmetries for an additional 20M episodes.
 
