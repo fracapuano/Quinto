@@ -145,6 +145,4 @@ While we take pride in the full pathernity of this work, we would like to acknow
 7. Lately, we have been experimenting with [ChatGPT](https://chat.openai.com/) for brainstorming and implementation tweaks.
 
 # Authors
-Francesco Capuano ([@fracapuano](https://github.com/fracapuano))
-
-Matteo Matteotti ([@mttmtt31](https://github.com/mttmtt31))
+Francesco Capuano ([@fracapuano](https://github.com/fracapuano)), Matteo Matteotti ([@mttmtt31](https://github.com/mttmtt31))
