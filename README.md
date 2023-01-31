@@ -35,7 +35,7 @@ The project requires Python 3.7 or higher and, among many, the following package
 - `gym`
 - `torch`
 
-To reproduce our training routine you must first create a virtual environment in which to install the required dependancies. You can do this via the following: 
+To reproduce our training routine you must first create a virtual environment in which to install the required dependencies. You can do this via the following: 
 ```
 conda create -n quarto
 pip install -r requirements.txt
@@ -89,7 +89,7 @@ For the sake of completeness, we also report here the time needed to train these
 |  **MaskedPPO**  |       v3      |   (100 + 20)e6  |   _~1 day, 3 hours_  |
 
 
-Please note that the last model here is presented is nothing but a an instance of the the `MASKEDPPOv2_100e6` model incrementally trained with self-play and simmetries for an additional 20M episodes.
+Please note that the last model presented here is nothing but an instance of the the `MASKEDPPOv2_100e6` model incrementally trained with self-play and symmetries for an additional 20M episodes.
 
 More details on the training procedures and the rationale behind the algorithm choices can be found in our report.
 
@@ -97,7 +97,7 @@ More details on the training procedures and the rationale behind the algorithm c
 
 Depending on the model used, it is necessary to use different objects (either from `stable-baselines3` or `sb3-contrib`) to correctly load the state dict characteristic of each model.
 
-To load a A2C or PPO-based model simply run (as per the official documentation: 
+To load a A2C or PPO-based model simply run (as per the official documentation): 
 
 ```python
 from stable_baselines3 import A2C, PPO
