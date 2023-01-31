@@ -6,7 +6,6 @@ from stable_baselines3.common.callbacks import CheckpointCallback, EveryNTimeste
 from commons.utils import WinPercentageCallback, UpdateOpponentCallback
 from itertools import compress
 import numpy as np
-import random
 import wandb
 from wandb.integration.sb3 import WandbCallback
 
@@ -49,7 +48,7 @@ def parse_args()->object:
     parser.add_argument("--save-model", default=False, type=boolean_string, help="Whether or not save the model currently trained")
     parser.add_argument("--resume-training", default=False, type=boolean_string, help="Whether or not load and keep train an already trained model")
     parser.add_argument("--model-path", default=None, type=str, help="Path to which the model to incrementally train is stored")
-    parser.add_argument("--use-symmetries", default=True, type=boolean_string, help="Whether or not let the agent exploit the game symmetries")
+    parser.add_argument("--use-symmetries", default=False, type=boolean_string, help="Whether or not let the agent exploit the game symmetries")
     parser.add_argument("--self-play", default=False, type=boolean_string, help="Whether or not to let the agent play against checkpointed copies of itself")
 
     # TO BE REMOVED
@@ -94,9 +93,9 @@ if args.debug:
 
 def main(): 
     # reproducibility - random seed setted
-    seed = 777
-    np.random.seed(seed)
-    random.seed(seed)
+    seed = None
+    # np.random.seed(seed)
+    # random.seed(seed)
 
     checkpoint_frequency = 250_000
     opponent_update_frequency = 500_000
@@ -180,7 +179,7 @@ def main():
 
     if logwandb: 
         run = wandb.init(
-        project="QuartoRL-v3 training",
+        project="QuartoRL-v2 seedless training",
         config=training_config,
         sync_tensorboard=True,  
         monitor_gym=True,
@@ -189,9 +188,12 @@ def main():
         # using W&B during training
         wand_callback = WandbCallback(verbose=2, gradient_save_freq=500)
         callback_list.append(wand_callback)
+        
+        
 
     # training the model with train_timesteps
     if not resume_training:
+        print(f"Training: {model_name}")
         model.learn(total_timesteps=train_timesteps, callback=callback_list, progress_bar=show_progressbar)
     
     elif resume_training and action_masking:

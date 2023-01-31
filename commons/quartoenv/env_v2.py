@@ -50,7 +50,7 @@ class RandomOpponentEnv_V2(QuartoBase):
     def reward_function(self, info:dict)->float:
         """Computes the reward at timestep `t` given the corresponding info dictionary (output of gym.Env.step() method)"""
         if info["win"]:  # fostering quicker wins
-            return 5 - (np.floor(info["turn"]/2)-4) * 0.75
+            return 5 - (np.floor(info["turn"]/2)-2) * 0.75
         elif info["draw"]:
             return 0.5
         elif info.get("loss", None):
