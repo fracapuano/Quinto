@@ -143,3 +143,7 @@ While we take pride in the full pathernity of this work, we would like to acknow
 6. Lastly, [this book](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) also played a huge role in our RL-based approach to this problem.
 
 7. Lately, we have been experimenting with [ChatGPT](https://chat.openai.com/) for brainstorming and implementation tweaks.
+
+# Authors
+Francesco Capuano (@francescocapuano)
+Matteo Matteotti (@mttmtt31)
