@@ -137,4 +137,4 @@ dmypy.json
 wandb/
 
 # tensorboard
-/tensorboard/
+*/tensorboard.id/
