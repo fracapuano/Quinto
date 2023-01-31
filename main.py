@@ -50,10 +50,14 @@ class RandomPlayer(Player):
 class RLPlayer(Player):
     def __init__(self, quarto: Quarto, model = None) -> None:
         super().__init__(quarto)
-        self.env = CustomOpponentEnv_V3()  # symmetries-aware
+        self.env = RandomOpponentEnv_V2()  # interface is used for prediction only, nothing really changes between envs here.
 
         if model:
             self.model = model
+            if isinstance(self.model, MaskablePPO):
+                self.uses_masking = True
+            else: 
+                self.uses_masking = False
         else:
             raise ValueError('Please, pass a valid model')
         self.model.set_env(env = ActionMasker(self.env, mask_function))
@@ -81,12 +85,12 @@ class RLPlayer(Player):
         
     def choose_piece(self) -> int:
         # we are just choosing a piece, so we don't care what we have in hand.
-        # what we have in hand is actually placed on the board, so it is an old (and wrong)
-        # piece of information
         if not self.action:
             self.env.game.board, self.env.piece = self.encode()
-            # self.env.game.board, self.env.piece = self.translate_pseudo()
-            action, _ = self.model.predict(self.env._observation, action_masks = mask_function(self.env))
+            if self.uses_masking:
+                action, _ = self.model.predict(self.env._observation, action_masks = mask_function(self.env))
+            else:
+                action, _ = self.model.predict(self.env._observation)
             self.decode(action)
 
         return self.action[1]
@@ -94,8 +98,10 @@ class RLPlayer(Player):
 
     def place_piece(self) -> Tuple[int, int]:
         self.env.game.board, self.env.piece = self.encode()
-        # self.env.game.board, self.env.piece = self.translate_pseudo()
-        action, _ = self.model.predict(self.env._observation, action_masks = mask_function(self.env))
+        if self.uses_masking:
+                action, _ = self.model.predict(self.env._observation, action_masks = mask_function(self.env))
+        else:
+            action, _ = self.model.predict(self.env._observation)
         self.decode(action)
 
         return self.action[0]
@@ -107,10 +113,8 @@ class RLPlayer(Player):
         # first let's change the integers on the board
         changeint_func = np.vectorize(self.indices_dict.get)
         board = changeint_func(board)
-        # # then, let's turn the board of integers into a board of QuartoPieces
-        # board = np.array([QuartoPiece(piece) if piece > -1 else -1 for piece in np.nditer(board)]).reshape(4, 4)
-        # translate the piece and turn it into QuartoPiece object
-        selected_piece = QuartoPiece(self.indices_dict[selected_piece]) 
+        # then, let's turn the board of integers into a board of QuartoPieces
+        selected_piece = QuartoPiece(self.indices_dict[selected_piece]) if selected_piece >= 0 else None
 
         return board, selected_piece  
 
@@ -127,13 +131,14 @@ def main():
         # create game
         game = Quarto()
         # create player
-        playerRL = player_B = RLPlayer(game, MaskablePPO.load(
-            'commons/trainedmodels/MASKEDPPOv3_130e6.zip', 
-            custom_objects = {
-            "learning_rate": 0.0,
-            "lr_schedule": lambda _: 0.0,
-            "clip_range": lambda _: 0.0,
-        }))
+        playerRL = RLPlayer(game, MaskablePPO.load(
+            'commons/trainedmodels/MASKEDPPOv3_130e6.zip',
+            custom_objects= {
+                "learning_rate": 0.0,
+                "lr_schedule": lambda _: 0.0, 
+                "clip_range": lambda _: 0.0
+            }
+        ))
         # set players
         game.set_players((RandomPlayer(game), playerRL))
         # run a match
