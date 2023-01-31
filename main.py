@@ -11,7 +11,6 @@ from commons.quartoenv.env_v3 import CustomOpponentEnv_V3
 from commons.quartoenv.game import QuartoPiece
 from sb3_contrib import MaskablePPO
 import numpy as np
-import time
 from tqdm import tqdm
 import gym
 from sb3_contrib.common.wrappers import ActionMasker
