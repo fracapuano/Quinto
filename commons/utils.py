@@ -3,6 +3,7 @@ from typing import Union
 from stable_baselines3.common.callbacks import BaseCallback
 import os
 from typing import Tuple
+import wandb
 
 class WinPercentageCallback(BaseCallback):
     """
@@ -29,7 +30,7 @@ class WinPercentageCallback(BaseCallback):
 
         :return: (bool) If the callback returns False, training is aborted early.
         """
-        wincounter, losscounter, drawcounter, invalidcounter = 0, 0, 0, 0
+        wincounter, losscounter, drawcounter, invalidcounter, matchduration = 0, 0, 0, 0, 0
         for episode in range(self.n_episodes):
             obs = self._env.reset()
             done = False
@@ -41,6 +42,14 @@ class WinPercentageCallback(BaseCallback):
                     action, _ = self.model.predict(obs)
                 # stepping the environment with the considered action 
                 obs, _, done, info = self._env.step(action=action)
+            
+            parent_obs = self._env.env._observation
+            
+            # unpacking parent observation
+            board = 16*parent_obs[:-1].reshape((4,4))
+            board_image = wandb.Image(board, caption="Board in Terminal State")
+
+            matchduration += info["turn"]/self.n_episodes
 
             if info["win"]: 
                 wincounter += 1
@@ -64,6 +73,15 @@ class WinPercentageCallback(BaseCallback):
                     100 * invalidcounter / self.n_episodes
                 )
             )
+        wandb.log({
+            "Win(%)": 100 * wincounter / self.n_episodes,
+            "Loss(%)": 100 * losscounter / self.n_episodes,
+            "Draw(%)": 100 * drawcounter / self.n_episodes, 
+            "Invalid(%)": 100 * invalidcounter / self.n_episodes,
+            "Game Turns": matchduration, 
+            "Board": board_image
+        })
+        
         return True
 
 class UpdateOpponentCallback(BaseCallback):
