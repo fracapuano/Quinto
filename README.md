@@ -54,6 +54,7 @@ The `train.py` scripts makes usage of several arguments. For the sake of brevity
 
 In a nutshell, the arguments are used to differentiate the training process for what concerns the **reward function** used and the **opponent** challenged during the training process. Furthermore, a version of the training process which makes usage of the highly symmetric structure of the game is also available. In particular: 
 
+<center>
 | **_Environment version_** |            **_Reward Function_**            | **_Uses symmetries_** |       **_Opponent_**       |
 |:-------------------------:|:-------------------------------------------:|:---------------------:|:--------------------------:|
 |            `v0`           |             $r_T = (+1, +0.2, 0)$            |           No          | Valid-Moves-Only Random Opponent |
@@ -76,6 +77,7 @@ Models' are saved in the `<ALGORITHM><VERSION>_<TRAININGTIMESTEPS>.zip` format, 
 
 For the sake of completeness, we also report here the time needed to train these models.
 
+<center>
 | **_Algorithm_** | **_Version_** | **_Timesteps_** | **_Training time_** |
 |:---------------:|:-------------:|:---------------:|:-------------------:|
 |     **PPO**     |       v0      |       5e6       |       _6h 29m_      |
