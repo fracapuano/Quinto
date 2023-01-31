@@ -44,7 +44,7 @@ pip install -r requirements.txt
 # Usage
 
 ## Reproduce our results
-To train the agent, simply run the following command:
+To train the agent with default configuration, simply run the following command:
 
 ```python
 python train.py
@@ -87,14 +87,59 @@ For the sake of completeness, we also report here the time needed to train these
 |  **MaskedPPO**  |       v2      |      100e6      |       _~1 week_      |
 |  **MaskedPPO**  |       v3      |   (100 + 20)e6  |   _~1 day, 3 hours_  |
 
+
+Please note that the last model here is presented is nothing but a an instance of the the `MASKEDPPOv2_100e6` model incrementally trained with self-play and simmetries for an additional 20M episodes.
+
 More details on the training procedures and the rationale behind the algorithm choices can be found in our report.
 
 ## Loading a trained model
 
-Depending on the model used, it is necessary to use different objects to train the state dict that characterizes 
+Depending on the model used, it is necessary to use different objects (either from `stable-baselines3` or `sb3-contrib`) to correctly load the state dict characteristic of each model.
 
-## Results
-The agent was able to achieve an average win rate of ~65% after 10,000 games.
+To load a A2C or PPO-based model simply run (as per the official documentation: 
+
+```python
+from stable_baselines3 import A2C, PPO
+from sb3_contrib import MaskablePPO
+
+A2C_model = A2C.load("commons/trainedmodels/A2Cv1_5e6.zip")
+PPO_model = PPO.load("commons/trainedmodels/PPOv0_5e6.zip")
+maskedPPO_model = MaskablePPO.load(
+            'commons/trainedmodels/MASKEDPPOv3_130e6.zip',
+            custom_objects= {
+                "learning_rate": 0.0,
+                "lr_schedule": lambda _: 0.0, 
+                "clip_range": lambda _: 0.0
+            }
+)
+```
+
+Moreover, a wrapper around these models has been implemented to make our players compatible with the common interface presented [here](https://github.com/squillero/computational-intelligence/tree/master/2022-23/quarto) and reproduced in this repo in the `main.py` file.
+
+Our players are modelled as instances of the `RLPlayer(...)`.
+
+## Experiments & Results
+An extensive discussion of our results can be found in the full report that complements this repo. 
+
+Our experiments related to the training phase of `v3` can be found [here](https://wandb.ai/francescocapuano/QuartoRL-v3%20training?workspace=user-). Currently, we are still experimenting with a last version fully trained with self-play. These experiments can be found [here](https://wandb.ai/francescocapuano/QuartoRL-v2%20seedless%20training?workspace=user-). 
+
+Tested against a randomly playing agent, our algorithm peaks 90%+ winning rate over 100 games. More interestingly, however, our approach allows running **more than 50 games a second**. 
+
+In particular, our algorithm can play 1000 games against a random agent, win the vast majority of these matches while requiring 50 seconds only. 
 
 ## Credits
-This project was implemented by [Your Name].
+While we take pride in the full pathernity of this work, we would like to acknowledge the influence of several online open-source resources such as: 
+
+1. [This repo](https://github.com/benallard/quarto-gym) has been used as an initial skeleton to develop this project. While we significantly expanded its code-base, having it allowed us to start on the right foot.
+
+2. [This piece of documentation](https://sb3-contrib.readthedocs.io/en/master/modules/ppo_mask.html) helped us developing the action-masking framework we have been using in this report.
+
+3. [This repo](https://github.com/hardmaru/slimevolleygym/blob/master/TRAINING.md) played a major role in the implementation of our self-play paradigm.
+
+4. As usual, countless visits to [Stack Overflow](https://stackoverflow.com/) have been a key part of the development process.
+
+5. [This paper](https://www.researchgate.net/publication/261848662_An_artificial_intelligence_for_the_board_game_'Quarto'_in_Java) has helped us in better framing the problem. 
+
+6. Lastly, [this book](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf) also played a huge role in our RL-based approach to this problem.
+
+7. Lately, we have been experimenting with [ChatGPT](https://chat.openai.com/) for brainstorming and implementation tweaks.
