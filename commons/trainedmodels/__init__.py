@@ -8,7 +8,10 @@ steps_dict = {
     3000: "3e3",
     1e6: "1e6",
     3e6: "3e6", 
-    5e6: "5e6"
+    5e6: "5e6",
+    20e6: "20e6",
+    50e6: "50e6",
+    100e6: "100e6"
 }
 
 def select_model(algorithm:str, version:str="v0", training_timesteps:float=1e6)->OnPolicyAlgorithm: 

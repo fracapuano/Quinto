@@ -1,0 +1,8 @@
+ale_py
+gym
+numpy
+rich
+sb3_contrib
+stable_baselines3
+wandb
+tqdm
