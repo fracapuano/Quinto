@@ -140,7 +140,7 @@ def main():
             }
         ))
         # set players
-        game.set_players((RandomPlayer(game), playerRL))
+        game.set_players((playerRL, RandomPlayer(game)))
         # run a match
         winner = game.run()
         # score results

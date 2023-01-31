@@ -50,6 +50,7 @@ def parse_args()->object:
     parser.add_argument("--model-path", default=None, type=str, help="Path to which the model to incrementally train is stored")
     parser.add_argument("--use-symmetries", default=False, type=boolean_string, help="Whether or not let the agent exploit the game symmetries")
     parser.add_argument("--self-play", default=False, type=boolean_string, help="Whether or not to let the agent play against checkpointed copies of itself")
+    parser.add_argument("--logwandb", default=True, type=boolean_string, help="Whether or not to log the training process on wandb")
 
     # TO BE REMOVED
     parser.add_argument("--debug", default=True, type=boolean_string, help="Debug mode, ignore all configurations")
@@ -73,6 +74,7 @@ resume_training=args.resume_training
 model_path=args.model_path
 use_symmetries=args.use_symmetries
 self_play=args.self_play
+logwandb=args.logwandb
 
 if args.debug: 
     algorithm = "maskedPPO"
@@ -92,7 +94,7 @@ if args.debug:
     model_path="commons/trainedmodels/MASKEDPPOv1_5e6.zip"
 
 def main(): 
-    # reproducibility - random seed setted
+    # no seed is setted, but it can be easily done
     seed = None
     # np.random.seed(seed)
     # random.seed(seed)
