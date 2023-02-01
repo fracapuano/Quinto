@@ -52,8 +52,7 @@ def parse_args()->object:
     parser.add_argument("--self-play", default=False, type=boolean_string, help="Whether or not to let the agent play against checkpointed copies of itself")
     parser.add_argument("--logwandb", default=True, type=boolean_string, help="Whether or not to log the training process on wandb")
 
-    # TO BE REMOVED
-    parser.add_argument("--debug", default=True, type=boolean_string, help="Debug mode, ignore all configurations")
+    parser.add_argument("--default", default=True, type=boolean_string, help="Default mode, ignore all configurations")
     return parser.parse_args()
 
 args = parse_args()
@@ -76,33 +75,32 @@ use_symmetries=args.use_symmetries
 self_play=args.self_play
 logwandb=args.logwandb
 
-if args.debug: 
+if args.default: 
     algorithm = "maskedPPO"
     verbose=2
-    train_timesteps=3000
-    evaluate_while_training=False
+    train_timesteps=100_000_000
+    evaluate_while_training=True
     store_checkpoints=True
-    evaluation_frequency=10
-    test_episodes=5
+    evaluation_frequency=1000
+    test_episodes=100
     action_masking=True
     losing_penalty=True
     duration_penalty=True
     show_progressbar=True
     save_model=True
-    use_symmetries=True
-    self_play=True
-    model_path="commons/trainedmodels/MASKEDPPOv1_5e6.zip"
+    use_symmetries=False
+    self_play=False
+    model_path=None
+    logwandb = True
 
 def main(): 
-    # no seed is setted, but it can be easily done
+    # no seed is setted, but it can be easily done uncommenting the following lines
     seed = None
     # np.random.seed(seed)
     # random.seed(seed)
 
     checkpoint_frequency = 250_000
     opponent_update_frequency = 500_000
-
-    logwandb = True
 
     # input sanity check
     if not action_masking:
