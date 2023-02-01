@@ -61,13 +61,13 @@ This procedure can be carried out running the following:
 ```bash
 $ python train.py  # train MASKEDv2_100e6, takes approximately a week.
 
-$ python train.py --algorithm maskedPPO --train-timesteps 20e6 --test-episodes 100 --losing-penalty True --save-model True --debug False --duration-penalty True --action-masking True --model-path commons/trainedmodels/MASKEDv2_100e6.zip --use-symmetries True --self-play True --resume-training True  # insert 20e6 training timesteps when prompted
+$ python train.py --default False --algorithm maskedPPO --train-timesteps 20e6 --test-episodes 100 --losing-penalty True --save-model True --duration-penalty True --action-masking True --model-path commons/trainedmodels/MASKEDv2_100e6.zip --use-symmetries True --self-play True --resume-training True  # insert 20e6 training timesteps when prompted
 ```
 
 Should the training process of `MASKEDPPOv2_100e6.zip` crash (as it has been crashing on our machine) you can resume training from one of the checkpoints saved in the `checkpoints` folder, by simply running: 
 
 ```
-$ python train.py --algorithm maskedPPO --test-episodes 100 --losing-penalty True --save-model True --debug False --duration-penalty True --action-masking True --model-path checkpoints/<checkpointed_model> --resume-training True # insert the number of timesteps you want the model to train after crashing
+$ python train.py --default False --algorithm maskedPPO --test-episodes 100 --losing-penalty True --save-model True --duration-penalty True --action-masking True --model-path checkpoints/<checkpointed_model> --resume-training True # insert the number of timesteps you want the model to train after crashing
 ```
 
 In a nutshell, the arguments of `train.py` are used to differentiate the training process for what concerns the **reward function** used and the **opponent** challenged during the training process. 
@@ -149,14 +149,18 @@ The fact that models are wrapped by the `Player` class (defined in `commons/quar
 Our players are modelled as instances of the `RLPlayer(...)`.
 
 ## Experiments & Results
-An extensive discussion of our results can be found in the full report that complements this repo. 
+An extensive discussion of our experimental results can be found in the full report that complements this repo. 
 
 Our experiments related to the training phase of `v3` can be found [here](https://wandb.ai/francescocapuano/QuartoRL-v3%20training?workspace=user-). 
-Currently, we are still experimenting with a last version fully trained with self-play. These experiments can be found [here](https://wandb.ai/francescocapuano/QuartoRL-v2%20seedless%20training?workspace=user-). 
 
-Tested against a randomly playing agent, our algorithm peaks 90%+ winning rate over 100 games. More interestingly, however, our approach allows running **more than 50 games a second**. 
+Currently, we are still experimenting with a last version fully trained with self-play for a larger number of episodes. 
+These experiments can be consulted [here](https://wandb.ai/francescocapuano/QuartoRL-v2%20seedless%20training?workspace=user-). 
+
+Tested against a randomly playing agent, our algorithm peaks 90%+ winning rate over 100 games. More interestingly, however, our approach allows running **more than 50 games a second**.
 
 In particular, our algorithm can play 1000 games against a random agent, win the vast majority of these matches while requiring 50 seconds only. 
+
+
 
 ## Credits
 While we take pride in the full pathernity of this work, we would like to acknowledge the influence of several online open-source resources such as: 
