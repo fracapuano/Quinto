@@ -1,5 +1,5 @@
 ![alt text](https://i.ibb.co/5jf3wPM/quarto-RL-logo.png)
-# QuartoRL: Solving Quarto with Reinforcement Learning
+# Quinto: Solving Quarto with Reinforcement Learning
 This repository contains the code necessary to design an end-to-end experimental setting to train a Deep Reinforcement Learning (RL) agent playing the game of Quarto. 
 
 The agent presented in this work is trained leveraging advancements made on On-Policy algorithms and, in particular, the training procedure does employ fairly innovative features such as Action Masking and incremental self-play.
