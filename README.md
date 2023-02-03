@@ -106,7 +106,7 @@ For the sake of completeness, we also report here the time needed to train these
 |  **MaskedPPO**  |       v0      |       5e6       |       _6h 27m_      |
 |  **MaskedPPO**  |       v1      |       5e6       |       _7h 28m_      |
 |  **MaskedPPO**  |       v2      |      100e6      |       _~1 week_      |
-|  **MaskedPPO**  |       v3      |   (100 + 20)e6  |   _~1 day, 3 hours_  |
+|  **MaskedPPO**  |       v3      |   (100 + 20)e6  |   _~1 week + 27 hours_  |
 
 
 Please note that the last model presented here is nothing but an instance of the the `MASKEDPPOv2_100e6` model incrementally trained with self-play and symmetries for an additional 20M timesteps.
@@ -149,7 +149,7 @@ The fact that models are wrapped by the `Player` class (defined in `commons/quar
 Our players are modelled as instances of the `RLPlayer(...)`.
 
 ## Experiments & Results
-An extensive discussion of our experimental results can be found in the full report that complements this repo. 
+An extensive discussion of our experimental results can be found in the [full report](https://github.com/fracapuano/Quinto/blob/main/Quinto_Report.pdf) that comes with this repo. 
 
 Our experiments related to the training phase of `v3` can be found [here](https://wandb.ai/francescocapuano/QuartoRL-v3%20training?workspace=user-). 
 
